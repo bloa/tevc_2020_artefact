@@ -1,5 +1,6 @@
 archives
 artefact/code
 artefact/data
+artefact/pyggi
 artefact/results_tevc
 __pycache__
