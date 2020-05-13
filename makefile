@@ -60,6 +60,7 @@ archives/png_greyscale.tar.gz:
 	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/tevc2020_png_greyscale.tar.gz' -O $@
 
 install_pyggi: archives/pyggi_6cb31a3.tar.gz
+	pip install argparse
 	rm -rf artefact/pyggi
 	tar -C artefact -xf $<
 	patch -d artefact -p 1 < instr/pyggi.patch
