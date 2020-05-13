@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<unit xmlns="http://www.srcML.org/srcML/src" xmlns:cpp="http://www.srcML.org/srcML/cpp" revision="0.9.5" language="C++" filename="nsga2func.h"><cpp:ifndef>#<cpp:directive>ifndef</cpp:directive> <name>__CNSGA2CLASS_H_</name></cpp:ifndef>
+<cpp:define>#<cpp:directive>define</cpp:directive> <cpp:macro><name>__CNSGA2CLASS_H_</name></cpp:macro></cpp:define>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/global.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/recombination.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/common.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"nsga2class.h"</cpp:file></cpp:include>
+
+<class>class <name>CNSGA2</name>    
+<block>{<private type="default">
+</private><public>public:
+	<constructor_decl><name>CNSGA2</name><parameter_list>()</parameter_list>;</constructor_decl>
+	<destructor_decl><specifier>virtual</specifier> <name>~<name>CNSGA2</name></name><parameter_list>()</parameter_list>;</destructor_decl>
+
+	<function_decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name>execute</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>run</name></decl></parameter>)</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>init_population</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>calc_distance</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>int</name></type>  <name>tour_selection</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>fill_union</name><parameter_list>(<parameter><decl><type><name>CNSGA2Ind</name> <modifier>&amp;</modifier></type><name>ind</name></decl></parameter>)</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>rank_popu</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>eval_dens</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>diffevolution</name><parameter_list>()</parameter_list>;</function_decl>
+	<function_decl><type><name>void</name></type> <name>save_front</name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>savefilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>;</function_decl>                              <comment type="line">// save the pareto front into files</comment>
+	<function_decl><type><name>void</name></type> <name>save_ps</name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>savefilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>;</function_decl>
+
+    <decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CNSGA2Ind</name></expr></argument>&gt;</argument_list></name></type>  <name>population</name></decl>;</decl_stmt>    
+	<decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CNSGA2Ind</name></expr></argument>&gt;</argument_list></name></type>  <name>ps</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CNSGA2Ind</name></expr></argument>&gt;</argument_list></name></type>  <name>offspring</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>double</name></type> <name>distance</name></decl>;</decl_stmt>
+
+	<decl_stmt><decl><type><name>int</name></type>    <name>nfes</name></decl>;</decl_stmt>
+
+    <function_decl type="operator"><type><name>void</name></type> <name>operator<name>=</name></name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>CNSGA2</name> <modifier>&amp;</modifier></type><name>alg</name></decl></parameter>)</parameter_list>;</function_decl>
+</public>}</block>;</class>
+
+<constructor><name><name>CNSGA2</name><operator>::</operator><name>CNSGA2</name></name><parameter_list>()</parameter_list><block>{
+
+}</block></constructor>
+
+<destructor><name><name>CNSGA2</name><operator>::</operator>~<name>CNSGA2</name></name><parameter_list>()</parameter_list><block>{
+
+}</block></destructor>
+
+<function type="operator"><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>operator<name>=</name></name></name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>CNSGA2</name> <modifier>&amp;</modifier></type><name>alg</name></decl></parameter>)</parameter_list>
+<block>{
+	<expr_stmt><expr><name>population</name> <operator>=</operator> <name><name>alg</name><operator>.</operator><name>population</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>offspring</name>  <operator>=</operator> <name><name>alg</name><operator>.</operator><name>offspring</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>ps</name>         <operator>=</operator> <name><name>alg</name><operator>.</operator><name>ps</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>nfes</name>       <operator>=</operator> <name><name>alg</name><operator>.</operator><name>nfes</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>distance</name>   <operator>=</operator> <name><name>alg</name><operator>.</operator><name>distance</name></name></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>init_population</name></name><parameter_list>()</parameter_list>
+<block>{
+
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>n</name><operator>&lt;</operator><name>pops</name></expr>;</condition><incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<decl_stmt><decl><type><name>CNSGA2Ind</name></type> <name>ind</name></decl>;</decl_stmt>
+		<expr_stmt><expr><call><name><name>ind</name><operator>.</operator><name>rnd_init</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>ind</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name>nfes</name><operator>++</operator></expr>;</expr_stmt>
+	}</block></for>
+}</block></function>
+
+<function><type><name>int</name></type>  <name><name>CNSGA2</name><operator>::</operator><name>tour_selection</name></name><parameter_list>()</parameter_list>
+<block>{
+	<decl_stmt><decl><type><name>int</name></type> <name>p1</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>*</operator><name>pops</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>int</name></type> <name>p2</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>*</operator><name>pops</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+	<if>if<condition>(<expr><name><name>population</name><index>[<expr><name>p1</name></expr>]</index></name><operator>.</operator><name>rank</name><operator>&lt;</operator><name><name>population</name><index>[<expr><name>p2</name></expr>]</index></name><operator>.</operator><name>rank</name></expr>)</condition><then>
+		<block type="pseudo"><return>return <expr><name>p1</name></expr>;</return></block></then>
+	<else>else
+		<block type="pseudo"><return>return <expr><name>p2</name></expr>;</return></block></else></if>
+}</block></function>
+
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>fill_union</name></name><parameter_list>(<parameter><decl><type><name>CNSGA2Ind</name> <modifier>&amp;</modifier></type><name>ind</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>bool</name></type> <name>flag</name> <init>= <expr><literal type="boolean">true</literal></expr></init></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>int</name></type>  <name>size</name> <init>= <expr><call><name><name>offspring</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>;</decl_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control><block>{
+		<if>if<condition>(<expr><name>ind</name><operator>==</operator><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name></expr>)</condition><then><block>{
+            <expr_stmt><expr><name>flag</name> <operator>=</operator> <literal type="boolean">false</literal></expr>;</expr_stmt>
+			<break>break;</break>
+		}</block></then></if>
+	}</block></for>
+	<if>if<condition>(<expr><name>flag</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><call><name><name>offspring</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>ind</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>diffevolution</name></name><parameter_list>()</parameter_list>
+<block>{
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>pops</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<decl_stmt><decl><type><name>int</name></type> <name>p1</name></decl>, <decl><type ref="prev"/><name>p2</name></decl>, <decl><type ref="prev"/><name>p3</name></decl>;</decl_stmt>        
+		<expr_stmt><expr><name>p1</name> <operator>=</operator> <call><name>tour_selection</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<while>while<condition>(<expr><literal type="number">1</literal></expr>)</condition><block>{  <expr_stmt><expr><name>p2</name> <operator>=</operator> <call><name>tour_selection</name><argument_list>()</argument_list></call></expr>;</expr_stmt>  	<if>if<condition>(<expr><name>p2</name><operator>!=</operator><name>p1</name></expr>)</condition><then> <block type="pseudo"><break>break;</break></block></then></if> }</block></while>
+		<while>while<condition>(<expr><literal type="number">1</literal></expr>)</condition><block>{  <expr_stmt><expr><name>p3</name> <operator>=</operator> <call><name>tour_selection</name><argument_list>()</argument_list></call></expr>;</expr_stmt>  	<if>if<condition>(<expr><name>p3</name><operator>!=</operator><name>p1</name><operator>&amp;&amp;</operator><name>p3</name><operator>!=</operator><name>p2</name></expr>)</condition><then> <block type="pseudo"><break>break;</break></block></then></if> }</block></while>
+		<decl_stmt><decl><type><name>CNSGA2Ind</name></type> <name>child</name></decl>;</decl_stmt>
+		<expr_stmt><expr><call><name>diff_evo_xover2</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>p1</name></expr>]</index></name></expr></argument>,<argument><expr><name><name>population</name><index>[<expr><name>p2</name></expr>]</index></name></expr></argument>,<argument><expr><name><name>population</name><index>[<expr><name>p3</name></expr>]</index></name></expr></argument>,<argument><expr><name>child</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>realmutation</name><argument_list>(<argument><expr><name>child</name></expr></argument>, <argument><expr><literal type="number">1.0</literal><operator>/</operator><name>nvar</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name><name>child</name><operator>.</operator><name>obj_eval</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+
+		<comment type="line">// save both parents and offspring into the combined population</comment>
+        <expr_stmt><expr><call><name>fill_union</name><argument_list>(<argument><expr><name>child</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>fill_union</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+		<expr_stmt><expr><name>nfes</name><operator>++</operator></expr>;</expr_stmt>
+	}</block></for>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>rank_popu</name></name><parameter_list>()</parameter_list>
+<block>{
+	<decl_stmt><decl><type><name>int</name></type> <name>size</name> <init>= <expr><call><name><name>offspring</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>int</name><modifier>*</modifier><modifier>*</modifier></type> <name>cset</name></decl>;</decl_stmt>  
+
+	<decl_stmt><decl><type><name>int</name><modifier>*</modifier></type> <name>rank</name> <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>size</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+
+	<expr_stmt><expr><name>cset</name> <operator>=</operator> <operator>new</operator> <name>int</name><operator>*</operator><index>[<expr><name>size</name></expr>]</index></expr>;</expr_stmt>
+
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control> 
+        <block type="pseudo"><expr_stmt><expr><name><name>cset</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <operator>new</operator> <name><name>int</name><index>[<expr><name>size</name></expr>]</index></name></expr>;</expr_stmt></block></for>
+
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control> 
+	<block>{
+		<expr_stmt><expr><name><name>rank</name><index>[<expr><name>i</name></expr>]</index></name>  <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+		<expr_stmt><expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>rank</name>  <operator>=</operator> <operator>-</operator><literal type="number">1</literal></expr>;</expr_stmt>
+		<expr_stmt><expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>count</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+
+	}</block></for>
+
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+	    <block type="pseudo"><for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+			<if>if<condition>(<expr><name>k</name><operator>!=</operator><name>j</name></expr>)</condition><then>
+			<block>{
+				<if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>j</name></expr>]</index></name><operator>&lt;</operator><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>&amp;&amp;</operator><operator>!</operator><operator>(</operator><name><name>offspring</name><index>[<expr><name>j</name></expr>]</index></name><operator>==</operator><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>)</operator></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name><name>rank</name><index>[<expr><name>k</name></expr>]</index></name><operator>++</operator></expr>;</expr_stmt></block></then></if>
+                
+				<if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>&lt;</operator><name><name>offspring</name><index>[<expr><name>j</name></expr>]</index></name><operator>&amp;&amp;</operator><operator>!</operator><operator>(</operator><name><name>offspring</name><index>[<expr><name>j</name></expr>]</index></name><operator>==</operator><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>)</operator></expr>)</condition><then>
+				<block>{
+					<expr_stmt><expr><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>count</name><operator>++</operator></expr>;</expr_stmt>
+					<decl_stmt><decl><type><name>int</name></type> <name>m</name> <init>= <expr><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>count</name> <operator>-</operator> <literal type="number">1</literal></expr></init></decl>;</decl_stmt>
+					<expr_stmt><expr><name><name>cset</name><index>[<expr><name>k</name></expr>]</index><index>[<expr><name>m</name></expr>]</index></name> <operator>=</operator> <name>j</name></expr>;</expr_stmt>
+				}</block></then></if>
+			}</block></then></if>
+		}</block></for></block></for>
+    
+	<decl_stmt><decl><type><name>int</name></type> <name>curr_rank</name> <init>= <expr><literal type="number">0</literal></expr></init></decl>;</decl_stmt>
+	<while>while<condition>(<expr><literal type="number">1</literal></expr>)</condition>
+	<block>{
+		<decl_stmt><decl><type><name>int</name></type> <name>stop_count</name> <init>= <expr><literal type="number">0</literal></expr></init></decl>;</decl_stmt>
+		<decl_stmt><decl><type><name>int</name><modifier>*</modifier></type> <name>rank2</name> <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>size</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	    <for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name><name>rank2</name><index>[<expr><name>k</name></expr>]</index></name> <operator>=</operator> <name><name>rank</name><index>[<expr><name>k</name></expr>]</index></name></expr>;</expr_stmt></block></for>
+
+        <for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+		<block>{			
+		    <if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>rank</name><operator>==</operator><operator>-</operator><literal type="number">1</literal><operator>&amp;&amp;</operator><name><name>rank</name><index>[<expr><name>k</name></expr>]</index></name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+			<block>{
+			    <expr_stmt><expr><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>rank</name> <operator>=</operator> <name>curr_rank</name></expr>;</expr_stmt>
+				<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><name><name>offspring</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>count</name></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+				<block>{
+				   <decl_stmt><decl><type><name>int</name></type> <name>id</name> <init>=	<expr><name><name>cset</name><index>[<expr><name>k</name></expr>]</index><index>[<expr><name>j</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+				   <expr_stmt><expr><name><name>rank2</name><index>[<expr><name>id</name></expr>]</index></name><operator>--</operator></expr>;</expr_stmt>
+				   <expr_stmt><expr><name>stop_count</name><operator>++</operator></expr>;</expr_stmt>
+				}</block></for>
+			}</block></then></if>						
+		}</block></for>
+
+	    <for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name><name>rank</name><index>[<expr><name>k</name></expr>]</index></name> <operator>=</operator> <name><name>rank2</name><index>[<expr><name>k</name></expr>]</index></name></expr>;</expr_stmt></block></for>
+
+        <expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>rank2</name></expr>;</expr_stmt>
+		<expr_stmt><expr><name>curr_rank</name><operator>++</operator></expr>;</expr_stmt>
+		<if>if<condition>(<expr><name>stop_count</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then> <block type="pseudo"><break>break;</break></block></then></if>
+	}</block></while>
+
+    <expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>rank</name></expr>;</expr_stmt>
+
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control> 
+        <block type="pseudo"><expr_stmt><expr><operator>delete</operator> <name><name>cset</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt></block></for>
+	<expr_stmt><expr><operator>delete</operator><index>[]</index> <name>cset</name></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>eval_dens</name></name><parameter_list>()</parameter_list>
+<block>{
+	<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<decl_stmt><decl><type><name>int</name></type> <name>size</name> <init>= <expr><call><name><name>offspring</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>int</name></type> <name>rank</name> <init>= <expr><literal type="number">0</literal></expr></init></decl>;</decl_stmt>
+	<while>while<condition>(<expr><literal type="number">1</literal></expr>)</condition><block>{
+		<decl_stmt><decl><type><name>int</name></type> <name>count</name> <init>= <expr><literal type="number">0</literal></expr></init></decl>;</decl_stmt>
+        <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>rank</name><operator>==</operator><name>rank</name></expr>)</condition><then>
+				<block type="pseudo"><expr_stmt><expr><name>count</name><operator>++</operator></expr>;</expr_stmt></block></then></if></block></for>
+
+		<decl_stmt><decl><type><name>int</name></type> <name>size2</name> <init>= <expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call> <operator>+</operator> <name>count</name></expr></init></decl>;</decl_stmt>
+		<if>if<condition>(<expr><name>size2</name><operator>&gt;</operator><name>pops</name></expr>)</condition><then> <block>{
+			<break>break;</break>
+		}</block></then></if>
+
+        <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+  	        <block type="pseudo"><if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>rank</name><operator>==</operator><name>rank</name></expr>)</condition><then>
+			    <block type="pseudo"><expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if></block></for>
+		<expr_stmt><expr><name>rank</name><operator>++</operator></expr>;</expr_stmt>
+		<if>if<condition>(<expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call><operator>&gt;=</operator><name>pops</name></expr>)</condition><then> <block type="pseudo"><break>break;</break></block></then></if>
+	}</block></while>
+
+	<if>if<condition>(<expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call><operator>&lt;</operator><name>pops</name></expr>)</condition><then><block>{
+	    <decl_stmt><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>CNSGA2Ind</name></expr></argument>&gt;</argument_list></name></type> <name>list</name></decl>;</decl_stmt>
+		<comment type="line">// save the individuals in the overflowed front</comment>
+        <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+  	        <block type="pseudo"><if>if<condition>(<expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>rank</name><operator>==</operator><name>rank</name></expr>)</condition><then>
+		        <block type="pseudo"><expr_stmt><expr><call><name><name>list</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name><name>offspring</name><index>[<expr><name>i</name></expr>]</index></name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if></block></for>
+		<decl_stmt><decl><type><name>int</name></type> <name>s2</name> <init>= <expr><call><name><name>list</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>;</decl_stmt>
+		<decl_stmt><decl><type><name>double</name> <modifier>*</modifier></type><name>density</name> <init>= <expr><operator>new</operator> <name><name>double</name><index>[<expr><name>s2</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+		<decl_stmt><decl><type><name>int</name>    <modifier>*</modifier></type><name>idx</name>     <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>s2</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>s2</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control><block>{
+			<expr_stmt><expr><name><name>idx</name><index>[<expr><name>i</name></expr>]</index></name>     <operator>=</operator> <name>i</name></expr>;</expr_stmt>
+			<expr_stmt><expr><name><name>density</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+		}</block></for>
+
+		<decl_stmt><decl><type><name>int</name>    <modifier>*</modifier></type><name>idd</name>     <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>s2</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+		<decl_stmt><decl><type><name>double</name> <modifier>*</modifier></type><name>obj</name>     <init>= <expr><operator>new</operator> <name><name>double</name><index>[<expr><name>s2</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><name>nobj</name></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control><block>{		    			
+			<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>s2</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control><block>{
+			    <expr_stmt><expr><name><name>idd</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>i</name></expr>;</expr_stmt>
+				<expr_stmt><expr><name><name>obj</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>list</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name><name>y_obj</name><index>[<expr><name>j</name></expr>]</index></name></expr>;</expr_stmt>
+			}</block></for>
+			<expr_stmt><expr><call><name>minfastsort</name><argument_list>(<argument><expr><name>obj</name></expr></argument>,<argument><expr><name>idd</name></expr></argument>,<argument><expr><name>s2</name></expr></argument>,<argument><expr><name>s2</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>density</name><index>[<expr><name><name>idd</name><index>[<expr><literal type="number">0</literal></expr>]</index></name></expr>]</index></name>    <operator>+=</operator> <operator>-</operator><literal type="number">1.0e+30</literal></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>density</name><index>[<expr><name><name>idd</name><index>[<expr><name>s2</name><operator>-</operator><literal type="number">1</literal></expr>]</index></name></expr>]</index></name> <operator>+=</operator> <operator>-</operator><literal type="number">1.0e+30</literal></expr>;</expr_stmt>
+			<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">1</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>s2</name><operator>-</operator><literal type="number">1</literal></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+				<block type="pseudo"><expr_stmt><expr><name><name>density</name><index>[<expr><name><name>idd</name><index>[<expr><name>k</name></expr>]</index></name></expr>]</index></name><operator>+=</operator> <operator>-</operator><operator>(</operator><name><name>obj</name><index>[<expr><name>k</name></expr>]</index></name> <operator>-</operator> <name><name>obj</name><index>[<expr><name>k</name><operator>-</operator><literal type="number">1</literal></expr>]</index></name> <operator>+</operator> <name><name>obj</name><index>[<expr><name>k</name><operator>+</operator><literal type="number">1</literal></expr>]</index></name> <operator>-</operator> <name><name>obj</name><index>[<expr><name>k</name></expr>]</index></name><operator>)</operator></expr>;</expr_stmt></block></for>
+		}</block></for>
+		<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>idd</name></expr>;</expr_stmt>
+		<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>obj</name></expr>;</expr_stmt>
+
+		<decl_stmt><decl><type><name>int</name></type> <name>s3</name> <init>= <expr><name>pops</name> <operator>-</operator> <call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>;</decl_stmt>
+
+		<expr_stmt><expr><call><name>minfastsort</name><argument_list>(<argument><expr><name>density</name></expr></argument>,<argument><expr><name>idx</name></expr></argument>,<argument><expr><name>s2</name></expr></argument>,<argument><expr><name>s3</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>s3</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name><name>list</name><index>[<expr><name><name>idx</name><index>[<expr><name>i</name></expr>]</index></name></expr>]</index></name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></for>
+
+		<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>density</name></expr>;</expr_stmt>
+		<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>idx</name></expr>;</expr_stmt>
+	}</block></then></if>
+	<expr_stmt><expr><call><name><name>offspring</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name><name>CNSGA2</name><operator>::</operator><name>execute</name></name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>run</name></decl></parameter>)</parameter_list>
+<block>{
+
+	<expr_stmt><expr><name>seed</name> <operator>=</operator> <operator>(</operator><name>seed</name> <operator>+</operator> <literal type="number">23</literal><operator>)</operator><operator>%</operator><literal type="number">1377</literal></expr>;</expr_stmt>					
+	<expr_stmt><expr><name>rnd_uni_init</name> <operator>=</operator> <operator>-</operator><operator>(</operator><name>long</name><operator>)</operator><name>seed</name></expr>;</expr_stmt>	
+	<decl_stmt><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name>gd</name></decl>;</decl_stmt>
+    
+	<decl_stmt><decl><type><name>char</name></type> <name><name>filename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl>;</decl_stmt>   
+
+    <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"PF/pf_%s.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name>loadpfront</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><name>ps</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><name>nfes</name>    <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt> 	 
+
+
+	<comment type="line">// first generation</comment>
+	<decl_stmt><decl><type><name>int</name></type> <name>gen</name>   <init>= <expr><literal type="number">1</literal></expr></init></decl>;</decl_stmt>    
+	<expr_stmt><expr><call><name>init_population</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>calc_distance</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><literal type="number">0</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>  <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>distance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+	
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>gen</name><init>=<expr><literal type="number">2</literal></expr></init></decl>;</init> <condition><expr><name>gen</name><operator>&lt;=</operator><name>max_gen</name></expr>;</condition> <incr><expr><name>gen</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+	    <expr_stmt><expr><call><name>diffevolution</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>rank_popu</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>eval_dens</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<decl_stmt><decl><type><name>int</name></type> <name>dd</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><name>max_gen</name><operator>/</operator><literal type="number">25.0</literal></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+        <if>if<condition>(<expr><name>gen</name><operator>%</operator><name>dd</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+	   	   <expr_stmt><expr><call><name>calc_distance</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	   	   <expr_stmt><expr><name>cout</name><operator>&lt;&lt;</operator><literal type="string">"gen = "</literal><operator>&lt;&lt;</operator><name>gen</name><operator>&lt;&lt;</operator><literal type="string">"  gd = "</literal><operator>&lt;&lt;</operator><name>distance</name><operator>&lt;&lt;</operator><literal type="string">"  "</literal><operator>&lt;&lt;</operator><name>endl</name></expr>;</expr_stmt>
+		   <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><call><name>int</name><argument_list>(<argument><expr><literal type="number">1.0</literal><operator>*</operator><name>gen</name><operator>/</operator><name>dd</name></expr></argument>)</argument_list></call></expr></argument>)</argument_list></call></expr>;</expr_stmt> <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>distance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if>  
+
+        <comment type="line">// save the final population - F space</comment>
+        <if>if<condition>(<expr><name>gen</name><operator>%</operator><name>max_gen</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+	       <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"POF/PF_NSGA2_%s_R%d_G%d.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>,<argument><expr><name>run</name></expr></argument>,<argument><expr><name>gen</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	       <expr_stmt><expr><call><name>save_front</name><argument_list>(<argument><expr><name>filename</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if>
+
+        <comment type="line">// save the final population - X space</comment>
+        <if>if<condition>(<expr><name>gen</name><operator>%</operator><name>max_gen</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+		   <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"POS/PS_NSGA2_%s_R%d_G%d.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>,<argument><expr><name>run</name></expr></argument>,<argument><expr><name>gen</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		   <expr_stmt><expr><call><name>save_ps</name><argument_list>(<argument><expr><name>filename</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if> 		
+	}</block></for>
+
+	<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name><name>offspring</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name><name>ps</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><name><name>std</name><operator>::</operator><name>cout</name></name><operator>&lt;&lt;</operator><literal type="string">" Outcome of the "</literal><operator>&lt;&lt;</operator><name>run</name><operator>&lt;&lt;</operator><literal type="string">"th run:  distance= "</literal><operator>&lt;&lt;</operator><name>distance</name><operator>&lt;&lt;</operator><literal type="string">" nfes = "</literal><operator>&lt;&lt;</operator><name>nfes</name><operator>&lt;&lt;</operator><name>endl</name></expr>;</expr_stmt>
+	<return>return <expr><name>gd</name></expr>;</return>
+
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>save_front</name></name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>saveFilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name><name>std</name><operator>::</operator><name>fstream</name></name></type> <name>fout</name></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>open</name></name><argument_list>(<argument><expr><name>saveFilename</name></expr></argument>,<argument><expr><name><name>std</name><operator>::</operator><name>ios</name><operator>::</operator><name>out</name></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>pops</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>k</name><operator>&lt;</operator><name>nobj</name></expr>;</condition><incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><name><name>y_obj</name><index>[<expr><name>k</name></expr>]</index></name><operator>&lt;&lt;</operator><literal type="string">"  "</literal></expr>;</expr_stmt></block></for>
+		<expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><literal type="string">"\n"</literal></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>close</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>save_ps</name></name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>saveFilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name><name>std</name><operator>::</operator><name>fstream</name></name></type> <name>fout</name></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>open</name></name><argument_list>(<argument><expr><name>saveFilename</name></expr></argument>,<argument><expr><name><name>std</name><operator>::</operator><name>ios</name><operator>::</operator><name>out</name></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>pops</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>k</name><operator>&lt;</operator><name>nvar</name></expr>;</condition><incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><name><name>x_var</name><index>[<expr><name>k</name></expr>]</index></name><operator>&lt;&lt;</operator><literal type="string">"  "</literal></expr>;</expr_stmt></block></for>
+		<expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><literal type="string">"\n"</literal></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>close</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+
+<function><type><name>void</name></type> <name><name>CNSGA2</name><operator>::</operator><name>calc_distance</name></name><parameter_list>()</parameter_list>
+<block>{
+    <expr_stmt><expr><name>distance</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><call><name><name>ps</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+	    <decl_stmt><decl><type><name>double</name></type> <name>min_d</name> <init>= <expr><literal type="number">1.0e+10</literal></expr></init></decl>;</decl_stmt>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+            <decl_stmt><decl><type><name>double</name></type> <name>d</name> <init>= <expr><call><name>dist_vector</name><argument_list>(<argument><expr><name><name>ps</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>y_obj</name></expr></argument>, <argument><expr><name><name>population</name><index>[<expr><name>j</name></expr>]</index></name><operator>.</operator><name>y_obj</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+			<if>if<condition>(<expr><name>d</name><operator>&lt;</operator><name>min_d</name></expr>)</condition><then>  <block type="pseudo"><expr_stmt><expr><name>min_d</name> <operator>=</operator> <name>d</name></expr>;</expr_stmt></block></then></if>
+		}</block></for>
+		<expr_stmt><expr><name>distance</name><operator>+=</operator> <name>min_d</name></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><name>distance</name><operator>/=</operator><call><name><name>ps</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<cpp:endif>#<cpp:directive>endif</cpp:directive></cpp:endif>
+
+</unit>

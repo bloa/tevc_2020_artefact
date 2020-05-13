@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<unit xmlns="http://www.srcML.org/srcML/src" xmlns:cpp="http://www.srcML.org/srcML/cpp" revision="0.9.5" language="C++" filename="dmoeafunc.h"><cpp:ifndef>#<cpp:directive>ifndef</cpp:directive> <name>__EVOLUTION_H_</name></cpp:ifndef>
+<cpp:define>#<cpp:directive>define</cpp:directive> <cpp:macro><name>__EVOLUTION_H_</name></cpp:macro></cpp:define>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/global.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/recombination.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/common.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"dmoeaclass.h"</cpp:file></cpp:include>
+
+
+<class>class <name>CMOEAD</name>
+<block>{<private type="default">
+
+</private><public>public:
+	<constructor_decl><name>CMOEAD</name><parameter_list>()</parameter_list>;</constructor_decl>
+	<destructor_decl><specifier>virtual</specifier> <name>~<name>CMOEAD</name></name><parameter_list>()</parameter_list>;</destructor_decl>
+
+
+	<function_decl><type><name>void</name></type> <name>init_uniformweight</name><parameter_list>()</parameter_list>;</function_decl>               <comment type="line">// initialize the weights for subproblems</comment>
+	<function_decl><type><name>void</name></type> <name>init_neighbourhood</name><parameter_list>()</parameter_list>;</function_decl>               <comment type="line">// calculate the neighbourhood of each subproblem</comment>
+	<function_decl><type><name>void</name></type> <name>init_population</name><parameter_list>()</parameter_list>;</function_decl>                  <comment type="line">// initialize the population</comment>
+
+
+	<function_decl><type><name>void</name></type> <name>update_reference</name><parameter_list>(<parameter><decl><type><name>CMOEADInd</name> <modifier>&amp;</modifier></type><name>ind</name></decl></parameter>)</parameter_list>;</function_decl>                 <comment type="line">// update ideal point which is used in Tchebycheff or NBI method</comment>
+	<function_decl><type><name>void</name></type> <name>update_problem</name><parameter_list>(<parameter><decl><type><name>CMOEADInd</name> <modifier>&amp;</modifier></type><name>ind</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>id</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>type</name></decl></parameter>)</parameter_list>;</function_decl> <comment type="line">// update current solutions in the neighbourhood</comment>
+
+	<function_decl><type><name>void</name></type> <name>diffevolution</name><parameter_list>()</parameter_list>;</function_decl>                                      <comment type="line">// DE-based recombination</comment>
+	<function_decl><type><name>void</name></type> <name>matingselection</name><parameter_list>(<parameter><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>int</name></expr></argument>&gt;</argument_list></name> <modifier>&amp;</modifier></type><name>list</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>cid</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>size</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>type</name></decl></parameter>)</parameter_list>;</function_decl>  <comment type="line">// select mating parents</comment>
+
+	<comment type="line">// execute MOEAD</comment>
+	<function_decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name>execute</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>run</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name>strfunc</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name>stralg</name></decl></parameter>)</parameter_list>;</function_decl>
+
+    <function_decl><type><name>void</name></type> <name>read_front</name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>filename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>;</function_decl>
+    <function_decl><type><name>void</name></type> <name>calc_distance</name><parameter_list>()</parameter_list>;</function_decl>
+
+	<function_decl><type><name>void</name></type> <name>save_front</name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>savefilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>;</function_decl>       <comment type="line">// save the pareto front into files</comment>
+	<function_decl><type><name>void</name></type> <name>save_ps</name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>savefilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>;</function_decl>
+
+    <decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CSUB</name></expr></argument>&gt;</argument_list></name></type>       <name>population</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CMOEADInd</name></expr></argument>&gt;</argument_list></name></type>  <name>ps</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>CSUB</name></expr></argument>&gt;</argument_list></name></type>       <name>offspring</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name><name>vector</name> <argument_list type="generic">&lt;<argument><expr><name>int</name></expr></argument>&gt;</argument_list></name></type>        <name>array</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>CMOEADInd</name>           <modifier>*</modifier></type><name>ind_arr</name></decl>;</decl_stmt>
+
+	<decl_stmt><decl><type><name>double</name></type>              <name>distance</name></decl>;</decl_stmt>                   <comment type="line">// generational distance from PF to solutions found</comment>
+	<decl_stmt><decl><type><name>int</name></type>                 <name>popsize</name></decl>;</decl_stmt>
+
+	<function_decl type="operator"><type><name>void</name></type> <name>operator<name>=</name></name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>CMOEAD</name> <modifier>&amp;</modifier></type><name>moea</name></decl></parameter>)</parameter_list>;</function_decl>
+</public>}</block>;</class>
+
+<constructor><name><name>CMOEAD</name><operator>::</operator><name>CMOEAD</name></name><parameter_list>()</parameter_list>
+<block>{
+
+	<expr_stmt><expr><name>ind_arr</name> <operator>=</operator> <operator>new</operator> <name><name>CMOEADInd</name><index>[<expr><name>nobj</name></expr>]</index></name></expr>;</expr_stmt>
+
+	<comment type="line">// initialize ideal point</comment>
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>nobj</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<expr_stmt><expr><call><name><name>idealpoint</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><literal type="number">1.0e+30</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name><name>ind_arr</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><call><name>rnd_init</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name><name>ind_arr</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><call><name>obj_eval</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	}</block></for>
+}</block></constructor>
+
+<destructor><name><name>CMOEAD</name><operator>::</operator>~<name>CMOEAD</name></name><parameter_list>()</parameter_list>
+<block>{
+	<expr_stmt><expr><call><name><name>idealpoint</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>ind_arr</name></expr>;</expr_stmt>
+}</block></destructor>
+
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>init_population</name></name><parameter_list>()</parameter_list>
+<block>{
+
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<expr_stmt><expr><name><name>population</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><call><name><name>indiv</name><operator>.</operator><name>rnd_init</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name><name>population</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><call><name><name>indiv</name><operator>.</operator><name>obj_eval</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>update_reference</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>indiv</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name>nfes</name><operator>++</operator></expr>;</expr_stmt>
+	}</block></for>
+}</block></function>
+
+<function type="operator"><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>operator<name>=</name></name></name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>CMOEAD</name> <modifier>&amp;</modifier></type><name>alg</name></decl></parameter>)</parameter_list>
+<block>{
+
+	<expr_stmt><expr><name>population</name> <operator>=</operator> <name><name>alg</name><operator>.</operator><name>population</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>ps</name>         <operator>=</operator> <name><name>alg</name><operator>.</operator><name>ps</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>ind_arr</name>    <operator>=</operator> <name><name>alg</name><operator>.</operator><name>ind_arr</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>offspring</name>  <operator>=</operator> <name><name>alg</name><operator>.</operator><name>offspring</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>distance</name>   <operator>=</operator> <name><name>alg</name><operator>.</operator><name>distance</name></name></expr>;</expr_stmt>
+	<expr_stmt><expr><name>popsize</name>    <operator>=</operator> <name><name>alg</name><operator>.</operator><name>popsize</name></name></expr>;</expr_stmt>
+}</block></function>
+
+
+<comment type="line">// createt the weight vectors with uniform distribution</comment>
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>init_uniformweight</name></name><parameter_list>()</parameter_list>
+<block>{
+	<if>if<condition>(<expr><name>nobj</name><operator>==</operator><literal type="number">2</literal></expr>)</condition><then>
+	<block>{
+		<comment type="line">//vector&lt;CMOEADInd&gt; ws;</comment>
+		<comment type="line">//loadpfront("F6Weight500.dat",ws);</comment>
+		<comment type="line">//pops = 500;</comment>
+
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>pops</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+			<decl_stmt><decl><type><name>CSUB</name></type> <name>sub</name></decl>;</decl_stmt>
+			<decl_stmt><decl><type><name>double</name></type> <name>a</name> <init>= <expr><literal type="number">1.0</literal><operator>*</operator><name>n</name><operator>/</operator><operator>(</operator><name>pops</name> <operator>-</operator> <literal type="number">1</literal><operator>)</operator></expr></init></decl>;</decl_stmt>
+			<expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>namda</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>a</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+			<expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>namda</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><literal type="number">1</literal><operator>-</operator><name>a</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+			<comment type="line">//load weight vectors from file</comment>
+			<comment type="line">//sub.namda.push_back(ws[n].y_obj[0]);</comment>
+			<comment type="line">//sub.namda.push_back(ws[n].y_obj[1]);</comment>
+
+			<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>sub</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></for>
+		<expr_stmt><expr><name>popsize</name> <operator>=</operator> <name>pops</name></expr>;</expr_stmt>
+	}</block></then>
+	<else>else
+	<block>{
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;=</operator><name>unit</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+			<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;=</operator><name>unit</name></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+			<block>{
+				<if>if<condition>(<expr><name>i</name><operator>+</operator><name>j</name><operator>&lt;=</operator><name>unit</name></expr>)</condition><then>
+				<block>{
+					<decl_stmt><decl><type><name>CSUB</name></type> <name>sub</name></decl>;</decl_stmt>
+					<expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>array</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>i</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+					<expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>array</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>j</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+					<expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>array</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>unit</name><operator>-</operator><name>i</name><operator>-</operator><name>j</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+					<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><call><name><name>sub</name><operator>.</operator><name>array</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+						<block type="pseudo"><expr_stmt><expr><call><name><name>sub</name><operator>.</operator><name>namda</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><literal type="number">1.0</literal><operator>*</operator><name><name>sub</name><operator>.</operator><name>array</name><index>[<expr><name>k</name></expr>]</index></name><operator>/</operator><name>unit</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></for>
+					<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>sub</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+				}</block></then></if>
+			}</block></for>
+		}</block></for>
+
+		<expr_stmt><expr><name>popsize</name> <operator>=</operator> <call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name>pops</name>    <operator>=</operator> <name>popsize</name></expr>;</expr_stmt>
+	}</block></else></if>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>init_neighbourhood</name></name><parameter_list>()</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>double</name> <modifier>*</modifier></type><name>x</name>   <init>= <expr><operator>new</operator> <name><name>double</name><index>[<expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>int</name>    <modifier>*</modifier></type><name>idx</name> <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<comment type="line">// calculate the distances based on weight vectors</comment>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+		    <expr_stmt><expr><name><name>x</name><index>[<expr><name>j</name></expr>]</index></name>    <operator>=</operator> <call><name>dist_vector</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>namda</name></expr></argument>,<argument><expr><name><name>population</name><index>[<expr><name>j</name></expr>]</index></name><operator>.</operator><name>namda</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+			<expr_stmt><expr><name><name>idx</name><index>[<expr><name>j</name></expr>]</index></name>  <operator>=</operator> <name>j</name></expr>;</expr_stmt>
+		}</block></for>
+	
+		<comment type="line">// find 'niche' nearest neighboring subproblems</comment>
+		<expr_stmt><expr><call><name>minfastsort</name><argument_list>(<argument><expr><name>x</name></expr></argument>,<argument><expr><name>idx</name></expr></argument>,<argument><expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></argument>,<argument><expr><name>niche</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>k</name><operator>&lt;</operator><name>niche</name></expr>;</condition> <incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+			<expr_stmt><expr><name><name>population</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><call><name><name>table</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name><name>idx</name><index>[<expr><name>k</name></expr>]</index></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></for>
+
+	}</block></for>
+    <expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>x</name></expr>;</expr_stmt>
+	<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>idx</name></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>update_problem</name></name><parameter_list>(<parameter><decl><type><name>CMOEADInd</name> <modifier>&amp;</modifier></type><name>indiv</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>id</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>type</name></decl></parameter>)</parameter_list>
+<block>{
+	<comment type="line">// indiv: child solution</comment>
+	<comment type="line">// id:   the id of current subproblem</comment>
+	<comment type="line">// type: update solutions in - neighborhood (1) or whole population (otherwise)</comment>
+	<decl_stmt><decl><type><name>int</name></type> <name>size</name></decl>, <decl><type ref="prev"/><name>time</name> <init>= <expr><literal type="number">0</literal></expr></init></decl>;</decl_stmt>
+	<if>if<condition>(<expr><name>type</name><operator>==</operator><literal type="number">1</literal></expr>)</condition><then>	<block type="pseudo"><expr_stmt><expr><name>size</name> <operator>=</operator> <name><name>population</name><index>[<expr><name>id</name></expr>]</index></name><operator>.</operator><call><name><name>table</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt></block></then>
+	<else>else        <block type="pseudo"><expr_stmt><expr><name>size</name> <operator>=</operator> <call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt></block></else></if>
+	<decl_stmt><decl><type><name>int</name> <modifier>*</modifier></type><name>perm</name> <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>size</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name>random_permutation</name><argument_list>(<argument><expr><name>perm</name></expr></argument>, <argument><expr><name>size</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>size</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<decl_stmt><decl><type><name>int</name></type> <name>k</name></decl>;</decl_stmt>
+		<if>if<condition>(<expr><name>type</name><operator>==</operator><literal type="number">1</literal></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name>k</name> <operator>=</operator> <name><name>population</name><index>[<expr><name>id</name></expr>]</index></name><operator>.</operator><name><name>table</name><index>[<expr><name><name>perm</name><index>[<expr><name>i</name></expr>]</index></name></expr>]</index></name></expr>;</expr_stmt></block></then>
+		<else>else        <block type="pseudo"><expr_stmt><expr><name>k</name> <operator>=</operator> <name><name>perm</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt></block></else></if>
+
+		<comment type="line">// calculate the values of objective function regarding the current subproblem</comment>
+		<decl_stmt><decl><type><name>double</name></type> <name>f1</name></decl>, <decl><type ref="prev"/><name>f2</name></decl>;</decl_stmt>
+		<expr_stmt><expr><name>f1</name> <operator>=</operator> <call><name>fitnessfunction</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name><name>indiv</name><operator>.</operator><name>y_obj</name></name></expr></argument>, <argument><expr><name><name>population</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>namda</name></expr></argument>, <argument><expr><name>ind_arr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><name>f2</name> <operator>=</operator> <call><name>fitnessfunction</name><argument_list>(<argument><expr><name><name>indiv</name><operator>.</operator><name>y_obj</name></name></expr></argument>, <argument><expr><name><name>population</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>namda</name></expr></argument>, <argument><expr><name>ind_arr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<if>if<condition>(<expr><name>f2</name><operator>&lt;</operator><name>f1</name></expr>)</condition><then>
+		<block>{
+			<expr_stmt><expr><name><name>population</name><index>[<expr><name>k</name></expr>]</index></name><operator>.</operator><name>indiv</name> <operator>=</operator> <name>indiv</name></expr>;</expr_stmt>
+			<expr_stmt><expr><name>time</name><operator>++</operator></expr>;</expr_stmt>
+		}</block></then></if>
+		<comment type="line">// the maximal number of solutions updated is not allowed to exceed 'limit'</comment>
+		<if>if<condition>(<expr><name>time</name><operator>&gt;=</operator><name>limit</name></expr>)</condition><then>
+		<block>{
+			<return>return;</return>
+		}</block></then></if>
+	}</block></for>
+	<expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>perm</name></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>update_reference</name></name><parameter_list>(<parameter><decl><type><name>CMOEADInd</name> <modifier>&amp;</modifier></type><name>ind</name></decl></parameter>)</parameter_list>
+<block>{
+	<comment type="line">//ind: child solution</comment>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>nobj</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<if>if<condition>(<expr><name><name>ind</name><operator>.</operator><name>y_obj</name><index>[<expr><name>n</name></expr>]</index></name><operator>&lt;</operator><name><name>idealpoint</name><index>[<expr><name>n</name></expr>]</index></name></expr>)</condition><then>
+		<block>{
+			<expr_stmt><expr><name><name>idealpoint</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind</name><operator>.</operator><name>y_obj</name><index>[<expr><name>n</name></expr>]</index></name></expr>;</expr_stmt>
+			<expr_stmt><expr><name><name>ind_arr</name><index>[<expr><name>n</name></expr>]</index></name>    <operator>=</operator> <name>ind</name></expr>;</expr_stmt>
+		}</block></then></if>
+	}</block></for>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>matingselection</name></name><parameter_list>(<parameter><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>int</name></expr></argument>&gt;</argument_list></name> <modifier>&amp;</modifier></type><name>list</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>cid</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>size</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>type</name></decl></parameter>)</parameter_list><block>{
+	<comment type="line">// list : the set of the indexes of selected mating parents</comment>
+	<comment type="line">// cid  : the id of current subproblem</comment>
+	<comment type="line">// size : the number of selected mating parents</comment>
+	<comment type="line">// type : 1 - neighborhood; otherwise - whole population</comment>
+	<decl_stmt><decl><type><name>int</name></type> <name>ss</name>   <init>= <expr><name><name>population</name><index>[<expr><name>cid</name></expr>]</index></name><operator>.</operator><call><name><name>table</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr></init></decl>, <decl><type ref="prev"/><name>r</name></decl>, <decl><type ref="prev"/><name>p</name></decl>;</decl_stmt>
+    <while>while<condition>(<expr><call><name><name>list</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call><operator>&lt;</operator><name>size</name></expr>)</condition>
+	<block>{
+		<if>if<condition>(<expr><name>type</name><operator>==</operator><literal type="number">1</literal></expr>)</condition><then><block>{
+		    <expr_stmt><expr><name>r</name> <operator>=</operator> <call><name>int</name><argument_list>(<argument><expr><name>ss</name><operator>*</operator><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+			<expr_stmt><expr><name>p</name> <operator>=</operator> <name><name>population</name><index>[<expr><name>cid</name></expr>]</index></name><operator>.</operator><name><name>table</name><index>[<expr><name>r</name></expr>]</index></name></expr>;</expr_stmt>
+		}</block></then>
+		<else>else
+			<block type="pseudo"><expr_stmt><expr><name>p</name> <operator>=</operator> <call><name>int</name><argument_list>(<argument><expr><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call><operator>*</operator><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></else></if>
+
+		<decl_stmt><decl><type><name>bool</name></type> <name>flag</name> <init>= <expr><literal type="boolean">true</literal></expr></init></decl>;</decl_stmt>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><call><name><name>list</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+			<if>if<condition>(<expr><name><name>list</name><index>[<expr><name>i</name></expr>]</index></name><operator>==</operator><name>p</name></expr>)</condition><then> <comment type="line">// p is in the list</comment>
+			<block>{ 
+				<expr_stmt><expr><name>flag</name> <operator>=</operator> <literal type="boolean">false</literal></expr>;</expr_stmt>
+				<break>break;</break>
+			}</block></then></if>
+		}</block></for>
+
+		<if>if<condition>(<expr><name>flag</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><call><name><name>list</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>p</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+	}</block></while>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>diffevolution</name></name><parameter_list>()</parameter_list>
+<block>{
+	<expr_stmt><expr><name>pops</name> <operator>=</operator> <call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<decl_stmt><decl><type><name>int</name> <modifier>*</modifier></type><name>perm</name> <init>= <expr><operator>new</operator> <name><name>int</name><index>[<expr><name>pops</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name>random_permutation</name><argument_list>(<argument><expr><name>perm</name></expr></argument>, <argument><expr><name>pops</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+    <for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>pops</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<decl_stmt><decl><type><name>int</name></type> <name>n</name> <init>= <expr><name><name>perm</name><index>[<expr><name>i</name></expr>]</index></name></expr></init></decl>;</decl_stmt>
+		<comment type="line">// or int n = i;</comment>
+		<decl_stmt><decl><type><name>int</name></type> <name>type</name></decl>;</decl_stmt>
+        <decl_stmt><decl><type><name>double</name></type> <name>rnd</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+		<comment type="line">// mating selection based on probability</comment>
+		<if>if<condition>(<expr><name>rnd</name><operator>&lt;</operator><name>realb</name></expr>)</condition><then>    <block type="pseudo"><expr_stmt><expr><name>type</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt></block></then>   <comment type="line">// neighborhood</comment>
+		<else>else             <block type="pseudo"><expr_stmt><expr><name>type</name> <operator>=</operator> <literal type="number">2</literal></expr>;</expr_stmt></block></else></if>   <comment type="line">// whole population</comment>
+
+		<comment type="line">// select the indexes of mating parents</comment>
+		<decl_stmt><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>int</name></expr></argument>&gt;</argument_list></name></type> <name>p</name></decl>;</decl_stmt>
+		<expr_stmt><expr><call><name>matingselection</name><argument_list>(<argument><expr><name>p</name></expr></argument>,<argument><expr><name>n</name></expr></argument>,<argument><expr><literal type="number">2</literal></expr></argument>,<argument><expr><name>type</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>  <comment type="line">// neighborhood selection</comment>
+
+		<comment type="line">// produce a child solution</comment>
+		<decl_stmt><decl><type><name>CMOEADInd</name></type> <name>child</name></decl>;</decl_stmt>
+		<expr_stmt><expr><call><name>diff_evo_xover2</name><argument_list>(<argument><expr><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><name>indiv</name></expr></argument>,<argument><expr><name><name>population</name><index>[<expr><name><name>p</name><index>[<expr><literal type="number">0</literal></expr>]</index></name></expr>]</index></name><operator>.</operator><name>indiv</name></expr></argument>,<argument><expr><name><name>population</name><index>[<expr><name><name>p</name><index>[<expr><literal type="number">1</literal></expr>]</index></name></expr>]</index></name><operator>.</operator><name>indiv</name></expr></argument>,<argument><expr><name>child</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+		<comment type="line">// apply polynomial mutation</comment>
+		<expr_stmt><expr><call><name>realmutation</name><argument_list>(<argument><expr><name>child</name></expr></argument>, <argument><expr><literal type="number">1.0</literal><operator>/</operator><name>nvar</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		
+		<comment type="line">// evaluate the child solution</comment>
+		<expr_stmt><expr><call><name><name>child</name><operator>.</operator><name>obj_eval</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+
+		<comment type="line">// update the reference points and other solutions in the neighborhood or the whole population</comment>
+		<expr_stmt><expr><call><name>update_reference</name><argument_list>(<argument><expr><name>child</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		<expr_stmt><expr><call><name>update_problem</name><argument_list>(<argument><expr><name>child</name></expr></argument>, <argument><expr><name>n</name></expr></argument>, <argument><expr><name>type</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+		<expr_stmt><expr><call><name><name>p</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt> 	<expr_stmt><expr><name>nfes</name><operator>++</operator></expr>;</expr_stmt> 
+	}</block></for>
+
+    <expr_stmt><expr><operator>delete</operator> <index>[]</index> <name>perm</name></expr>;</expr_stmt>
+}</block></function>
+
+
+<function><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name><name>CMOEAD</name><operator>::</operator><name>execute</name></name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>run</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name>strfunc</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name>stralg</name></decl></parameter>)</parameter_list>
+<block>{
+	<expr_stmt><expr><name>seed</name> <operator>=</operator> <operator>(</operator><name>seed</name> <operator>+</operator> <literal type="number">23</literal><operator>)</operator><operator>%</operator><literal type="number">1377</literal></expr>;</expr_stmt>
+	<expr_stmt><expr><name>rnd_uni_init</name> <operator>=</operator> <operator>-</operator><operator>(</operator><name>long</name><operator>)</operator><name>seed</name></expr>;</expr_stmt>
+
+    <expr_stmt><expr><call><name>strcpy</name><argument_list>(<argument><expr><name>strFunctionType</name></expr></argument>,<argument><expr><name>strfunc</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name>strcpy</name><argument_list>(<argument><expr><name>strAlgorithmType</name></expr></argument>,<argument><expr><name>stralg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+	<decl_stmt><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name></type> <name>gd</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>char</name></type> <name><name>filename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl>;</decl_stmt>
+
+	<comment type="line">// load the representative Pareto-optimal solutions</comment>
+    <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"PF/pf_%s.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name>loadpfront</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><name>ps</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+	<comment type="line">// initialization </comment>
+	<decl_stmt><decl><type><name>int</name></type> <name>gen</name>   <init>= <expr><literal type="number">1</literal></expr></init></decl>;</decl_stmt>
+	<expr_stmt><expr><name>nfes</name>      <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name>init_uniformweight</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>init_neighbourhood</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name>init_population</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>calc_distance</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+
+	<expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><literal type="number">0</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>  <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>distance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>  <comment type="line">// id and igd value</comment>
+
+	<comment type="line">// evolution</comment>
+	<for>for<control>(<init><expr><name>gen</name><operator>=</operator><literal type="number">2</literal></expr>;</init> <condition><expr><name>gen</name><operator>&lt;=</operator><name>max_gen</name></expr>;</condition> <incr><expr><name>gen</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+
+		<expr_stmt><expr><call><name>diffevolution</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+		
+		<decl_stmt><decl><type><name>int</name></type> <name>dd</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><name>max_gen</name><operator>/</operator><literal type="number">25.0</literal></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+		<comment type="line">// calculate igd-values</comment>
+        <if>if<condition>(<expr><name>gen</name><operator>%</operator><name>dd</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+	   	   <expr_stmt><expr><call><name>calc_distance</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	   	   <expr_stmt><expr><name>cout</name><operator>&lt;&lt;</operator><literal type="string">"gen = "</literal><operator>&lt;&lt;</operator><name>gen</name><operator>&lt;&lt;</operator><literal type="string">"  gd = "</literal><operator>&lt;&lt;</operator><name>distance</name><operator>&lt;&lt;</operator><literal type="string">"  "</literal><operator>&lt;&lt;</operator><name>endl</name></expr>;</expr_stmt>
+		   <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><call><name>int</name><argument_list>(<argument><expr><literal type="number">1.0</literal><operator>*</operator><name>gen</name><operator>/</operator><name>dd</name></expr></argument>)</argument_list></call></expr></argument>)</argument_list></call></expr>;</expr_stmt> <expr_stmt><expr><call><name><name>gd</name><operator>.</operator><name>push_back</name></name><argument_list>(<argument><expr><name>distance</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if>
+
+		<comment type="line">// save the final population - F space</comment>
+        <if>if<condition>(<expr><name>gen</name><operator>%</operator><name>max_gen</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+	       <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"POF/PF_DMOEA_%s_R%d_G%d.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>,<argument><expr><name>run</name></expr></argument>,<argument><expr><name>gen</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	       <expr_stmt><expr><call><name>save_front</name><argument_list>(<argument><expr><name>filename</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if>
+
+		<comment type="line">// save the final population - X space</comment>
+		<if>if<condition>(<expr><name>gen</name><operator>%</operator><name>max_gen</name><operator>==</operator><literal type="number">0</literal></expr>)</condition><then>
+		<block>{
+		   <expr_stmt><expr><call><name>sprintf</name><argument_list>(<argument><expr><name>filename</name></expr></argument>,<argument><expr><literal type="string">"POS/PS_DMOEA_%s_R%d_G%d.dat"</literal></expr></argument>,<argument><expr><name>strTestInstance</name></expr></argument>,<argument><expr><name>run</name></expr></argument>,<argument><expr><name>gen</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		   <expr_stmt><expr><call><name>save_ps</name><argument_list>(<argument><expr><name>filename</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+		}</block></then></if>
+	}</block></for>
+
+	<expr_stmt><expr><call><name><name>population</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><call><name><name>ps</name><operator>.</operator><name>clear</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+	<expr_stmt><expr><name><name>std</name><operator>::</operator><name>cout</name></name><operator>&lt;&lt;</operator><literal type="string">" Outcome of the "</literal><operator>&lt;&lt;</operator><name>run</name><operator>&lt;&lt;</operator><literal type="string">"th run:  distance= "</literal><operator>&lt;&lt;</operator><name>distance</name><operator>&lt;&lt;</operator><literal type="string">" nfes = "</literal><operator>&lt;&lt;</operator><name>nfes</name><operator>&lt;&lt;</operator><name>endl</name></expr>;</expr_stmt>
+	<return>return <expr><name>gd</name></expr>;</return>
+}</block></function>
+
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>save_front</name></name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>saveFilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name><name>std</name><operator>::</operator><name>fstream</name></name></type> <name>fout</name></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>open</name></name><argument_list>(<argument><expr><name>saveFilename</name></expr></argument>,<argument><expr><name><name>std</name><operator>::</operator><name>ios</name><operator>::</operator><name>out</name></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>popsize</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>k</name><operator>&lt;</operator><name>nobj</name></expr>;</condition><incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><name><name>indiv</name><operator>.</operator><name>y_obj</name><index>[<expr><name>k</name></expr>]</index></name><operator>&lt;&lt;</operator><literal type="string">"  "</literal></expr>;</expr_stmt></block></for>
+		<expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><literal type="string">"\n"</literal></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>close</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>save_ps</name></name><parameter_list>(<parameter><decl><type><name>char</name></type> <name><name>saveFilename</name><index>[<expr><literal type="number">1024</literal></expr>]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name><name>std</name><operator>::</operator><name>fstream</name></name></type> <name>fout</name></decl>;</decl_stmt>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>open</name></name><argument_list>(<argument><expr><name>saveFilename</name></expr></argument>,<argument><expr><name><name>std</name><operator>::</operator><name>ios</name><operator>::</operator><name>out</name></name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>n</name><operator>&lt;</operator><name>popsize</name></expr>;</condition> <incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>k</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>k</name><operator>&lt;</operator><name>nvar</name></expr>;</condition><incr><expr><name>k</name><operator>++</operator></expr></incr>)</control>
+			<block type="pseudo"><expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><name><name>population</name><index>[<expr><name>n</name></expr>]</index></name><operator>.</operator><name><name>indiv</name><operator>.</operator><name>x_var</name><index>[<expr><name>k</name></expr>]</index></name><operator>&lt;&lt;</operator><literal type="string">"  "</literal></expr>;</expr_stmt></block></for>
+		<expr_stmt><expr><name>fout</name><operator>&lt;&lt;</operator><literal type="string">"\n"</literal></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><call><name><name>fout</name><operator>.</operator><name>close</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+
+<function><type><name>void</name></type> <name><name>CMOEAD</name><operator>::</operator><name>calc_distance</name></name><parameter_list>()</parameter_list>
+<block>{
+    <expr_stmt><expr><name>distance</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+	<for>for<control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><call><name><name>ps</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+	<block>{
+	    <decl_stmt><decl><type><name>double</name></type> <name>min_d</name> <init>= <expr><literal type="number">1.0e+10</literal></expr></init></decl>;</decl_stmt>
+		<for>for<control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><call><name><name>population</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+		<block>{
+            <decl_stmt><decl><type><name>double</name></type> <name>d</name> <init>= <expr><call><name>dist_vector</name><argument_list>(<argument><expr><name><name>ps</name><index>[<expr><name>i</name></expr>]</index></name><operator>.</operator><name>y_obj</name></expr></argument>, <argument><expr><name><name>population</name><index>[<expr><name>j</name></expr>]</index></name><operator>.</operator><name><name>indiv</name><operator>.</operator><name>y_obj</name></name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+			<if>if<condition>(<expr><name>d</name><operator>&lt;</operator><name>min_d</name></expr>)</condition><then>  <block type="pseudo"><expr_stmt><expr><name>min_d</name> <operator>=</operator> <name>d</name></expr>;</expr_stmt></block></then></if>
+		}</block></for>
+		<expr_stmt><expr><name>distance</name><operator>+=</operator> <name>min_d</name></expr>;</expr_stmt>
+	}</block></for>
+	<expr_stmt><expr><name>distance</name><operator>/=</operator><call><name><name>ps</name><operator>.</operator><name>size</name></name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<cpp:endif>#<cpp:directive>endif</cpp:directive></cpp:endif>
+</unit>

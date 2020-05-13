@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<unit xmlns="http://www.srcML.org/srcML/src" xmlns:cpp="http://www.srcML.org/srcML/cpp" revision="0.9.5" language="C++" filename="recombination.h"><cpp:ifndef>#<cpp:directive>ifndef</cpp:directive> <name>_RECOMBINATION_H_</name></cpp:ifndef>
+<cpp:define>#<cpp:directive>define</cpp:directive> <cpp:macro><name>_RECOMBINATION_H_</name></cpp:macro></cpp:define>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"../common/global.h"</cpp:file></cpp:include>
+
+<comment type="block">/* Routine for real polynomial mutation of an T */</comment>
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>realmutation</name><parameter_list>(<parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>ind</name></decl></parameter>, <parameter><decl><type><name>double</name></type> <name>rate</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>double</name></type> <name>rnd</name></decl>, <decl><type ref="prev"/><name>delta1</name></decl>, <decl><type ref="prev"/><name>delta2</name></decl>, <decl><type ref="prev"/><name>mut_pow</name></decl>, <decl><type ref="prev"/><name>deltaq</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>y</name></decl>, <decl><type ref="prev"/><name>yl</name></decl>, <decl><type ref="prev"/><name>yu</name></decl>, <decl><type ref="prev"/><name>val</name></decl>, <decl><type ref="prev"/><name>xy</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>double</name></type> <name>eta_m</name> <init>= <expr><name>etam</name></expr></init></decl>;</decl_stmt>
+
+	<decl_stmt><decl><type><name>int</name></type>    <name>id_rnd</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>*</operator><name>nvar</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+    <for>for <control>(<init><decl><type><name>int</name></type> <name>j</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>j</name><operator>&lt;</operator><name>nvar</name></expr>;</condition> <incr><expr><name>j</name><operator>++</operator></expr></incr>)</control>
+    <block>{
+        <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>&lt;=</operator><name>rate</name></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><name>y</name>  <operator>=</operator> <name><name>ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>j</name></expr>]</index></name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>yl</name> <operator>=</operator> <name>lowBound</name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>yu</name> <operator>=</operator> <name>uppBound</name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>delta1</name> <operator>=</operator> <operator>(</operator><name>y</name><operator>-</operator><name>yl</name><operator>)</operator><operator>/</operator><operator>(</operator><name>yu</name><operator>-</operator><name>yl</name><operator>)</operator></expr>;</expr_stmt>
+            <expr_stmt><expr><name>delta2</name> <operator>=</operator> <operator>(</operator><name>yu</name><operator>-</operator><name>y</name><operator>)</operator><operator>/</operator><operator>(</operator><name>yu</name><operator>-</operator><name>yl</name><operator>)</operator></expr>;</expr_stmt>
+            <expr_stmt><expr><name>rnd</name> <operator>=</operator> <call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name>mut_pow</name> <operator>=</operator> <literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_m</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name>rnd</name> <operator>&lt;=</operator> <literal type="number">0.5</literal></expr>)</condition><then>
+            <block>{
+                <expr_stmt><expr><name>xy</name> <operator>=</operator> <literal type="number">1.0</literal><operator>-</operator><name>delta1</name></expr>;</expr_stmt>
+                <expr_stmt><expr><name>val</name> <operator>=</operator> <literal type="number">2.0</literal><operator>*</operator><name>rnd</name><operator>+</operator><operator>(</operator><literal type="number">1.0</literal><operator>-</operator><literal type="number">2.0</literal><operator>*</operator><name>rnd</name><operator>)</operator><operator>*</operator><operator>(</operator><call><name>pow</name><argument_list>(<argument><expr><name>xy</name></expr></argument>,<argument><expr><operator>(</operator><name>eta_m</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call><operator>)</operator></expr>;</expr_stmt>
+                <expr_stmt><expr><name>deltaq</name> <operator>=</operator>  <call><name>pow</name><argument_list>(<argument><expr><name>val</name></expr></argument>,<argument><expr><name>mut_pow</name></expr></argument>)</argument_list></call> <operator>-</operator> <literal type="number">1.0</literal></expr>;</expr_stmt>
+            }</block></then>
+            <else>else
+            <block>{
+                <expr_stmt><expr><name>xy</name> <operator>=</operator> <literal type="number">1.0</literal><operator>-</operator><name>delta2</name></expr>;</expr_stmt>
+                <expr_stmt><expr><name>val</name> <operator>=</operator> <literal type="number">2.0</literal><operator>*</operator><operator>(</operator><literal type="number">1.0</literal><operator>-</operator><name>rnd</name><operator>)</operator><operator>+</operator><literal type="number">2.0</literal><operator>*</operator><operator>(</operator><name>rnd</name><operator>-</operator><literal type="number">0.5</literal><operator>)</operator><operator>*</operator><operator>(</operator><call><name>pow</name><argument_list>(<argument><expr><name>xy</name></expr></argument>,<argument><expr><operator>(</operator><name>eta_m</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call><operator>)</operator></expr>;</expr_stmt>
+                <expr_stmt><expr><name>deltaq</name> <operator>=</operator> <literal type="number">1.0</literal> <operator>-</operator> <operator>(</operator><call><name>pow</name><argument_list>(<argument><expr><name>val</name></expr></argument>,<argument><expr><name>mut_pow</name></expr></argument>)</argument_list></call><operator>)</operator></expr>;</expr_stmt>
+            }</block></else></if>
+            <expr_stmt><expr><name>y</name> <operator>=</operator> <name>y</name> <operator>+</operator> <name>deltaq</name><operator>*</operator><operator>(</operator><name>yu</name><operator>-</operator><name>yl</name><operator>)</operator></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name>y</name><operator>&lt;</operator><name>yl</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><name>y</name> <operator>=</operator> <name>yl</name></expr>;</expr_stmt></block></then></if>
+            <if>if <condition>(<expr><name>y</name><operator>&gt;</operator><name>yu</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><name>y</name> <operator>=</operator> <name>yu</name></expr>;</expr_stmt></block></then></if>
+            <expr_stmt><expr><name><name>ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>j</name></expr>]</index></name> <operator>=</operator> <name>y</name></expr>;</expr_stmt>
+        }</block></then></if>
+    }</block></for>
+    <return>return;</return>
+}</block></function>
+
+
+<comment type="block">/* Routine for real variable SBX crossover */</comment>
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>real_sbx_xover1</name><parameter_list>(<parameter><decl><type><name>T</name></type> <name>parent1</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>parent2</name></decl></parameter>, <parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>child1</name></decl></parameter>, <parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>child2</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>double</name></type> <name>rand</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>y1</name></decl>, <decl><type ref="prev"/><name>y2</name></decl>, <decl><type ref="prev"/><name>yl</name></decl>, <decl><type ref="prev"/><name>yu</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>c1</name></decl>, <decl><type ref="prev"/><name>c2</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>alpha</name></decl>, <decl><type ref="prev"/><name>beta</name></decl>, <decl><type ref="prev"/><name>betaq</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>double</name></type> <name>eta_c</name> <init>= <expr><name>etax</name></expr></init></decl>;</decl_stmt>
+    <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call> <operator>&lt;=</operator> <literal type="number">1.0</literal></expr>)</condition><then> 
+    <block>{
+        <for>for <control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>nvar</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+        <block>{
+            <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>&lt;=</operator><literal type="number">0.5</literal></expr> )</condition><then>
+            <block>{
+                <if>if <condition>(<expr><call><name>fabs</name><argument_list>(<argument><expr><name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name><operator>-</operator><name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr></argument>)</argument_list></call> <operator>&gt;</operator> <name>EPS</name></expr>)</condition><then>
+                <block>{
+                    <if>if <condition>(<expr><name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&lt;</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>y1</name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name>y2</name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>y1</name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name>y2</name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>yl</name> <operator>=</operator> <name>lowBound</name></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>yu</name> <operator>=</operator> <name>uppBound</name></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>rand</name> <operator>=</operator> <call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>beta</name> <operator>=</operator> <literal type="number">1.0</literal> <operator>+</operator> <operator>(</operator><literal type="number">2.0</literal><operator>*</operator><operator>(</operator><name>y1</name><operator>-</operator><name>yl</name><operator>)</operator><operator>/</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>alpha</name> <operator>=</operator> <literal type="number">2.0</literal> <operator>-</operator> <call><name>pow</name><argument_list>(<argument><expr><name>beta</name></expr></argument>,<argument><expr><operator>-</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>rand</name> <operator>&lt;=</operator> <operator>(</operator><literal type="number">1.0</literal><operator>/</operator><name>alpha</name><operator>)</operator></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><literal type="number">2.0</literal> <operator>-</operator> <name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>c1</name> <operator>=</operator> <literal type="number">0.5</literal><operator>*</operator><operator>(</operator><operator>(</operator><name>y1</name><operator>+</operator><name>y2</name><operator>)</operator><operator>-</operator><name>betaq</name><operator>*</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>beta</name> <operator>=</operator> <literal type="number">1.0</literal> <operator>+</operator> <operator>(</operator><literal type="number">2.0</literal><operator>*</operator><operator>(</operator><name>yu</name><operator>-</operator><name>y2</name><operator>)</operator><operator>/</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>alpha</name> <operator>=</operator> <literal type="number">2.0</literal> <operator>-</operator> <call><name>pow</name><argument_list>(<argument><expr><name>beta</name></expr></argument>,<argument><expr><operator>-</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>rand</name> <operator>&lt;=</operator> <operator>(</operator><literal type="number">1.0</literal><operator>/</operator><name>alpha</name><operator>)</operator></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><literal type="number">2.0</literal> <operator>-</operator> <name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>c2</name> <operator>=</operator> <literal type="number">0.5</literal><operator>*</operator><operator>(</operator><operator>(</operator><name>y1</name><operator>+</operator><name>y2</name><operator>)</operator><operator>+</operator><name>betaq</name><operator>*</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>c1</name><operator>&lt;</operator><name>yl</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c1</name><operator>=</operator><name>yl</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c2</name><operator>&lt;</operator><name>yl</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c2</name><operator>=</operator><name>yl</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c1</name><operator>&gt;</operator><name>yu</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c1</name><operator>=</operator><name>yu</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c2</name><operator>&gt;</operator><name>yu</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c2</name><operator>=</operator><name>yu</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>&lt;=</operator><literal type="number">0.5</literal></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name><name>child1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c2</name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name><name>child2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c1</name></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name><name>child1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c1</name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name><name>child2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c2</name></expr>;</expr_stmt>
+                    }</block></else></if>
+                }</block></then>
+                <else>else
+                <block>{
+                    <expr_stmt><expr><name><name>child1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    <expr_stmt><expr><name><name>child2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                }</block></else></if>
+            }</block></then>
+            <else>else
+            <block>{
+                <expr_stmt><expr><name><name>child1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                <expr_stmt><expr><name><name>child2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+            }</block></else></if>
+        }</block></for>
+    }</block></then>
+    <else>else
+    <block>{
+        <for>for <control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>nvar</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+        <block>{
+            <expr_stmt><expr><name><name>child1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>child2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+        }</block></for>
+    }</block></else></if>
+    <return>return;</return>
+}</block></function>
+
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>real_sbx_xover2</name> <parameter_list>(<parameter><decl><type><name>T</name></type> <name>parent1</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>parent2</name></decl></parameter>, <parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>child</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>double</name></type> <name>rand</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>y1</name></decl>, <decl><type ref="prev"/><name>y2</name></decl>, <decl><type ref="prev"/><name>yl</name></decl>, <decl><type ref="prev"/><name>yu</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>c1</name></decl>, <decl><type ref="prev"/><name>c2</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>double</name></type> <name>alpha</name></decl>, <decl><type ref="prev"/><name>beta</name></decl>, <decl><type ref="prev"/><name>betaq</name></decl>;</decl_stmt>
+	<decl_stmt><decl><type><name>double</name></type> <name>eta_c</name> <init>= <expr><name>etax</name></expr></init></decl>;</decl_stmt>
+    <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call> <operator>&lt;=</operator> <literal type="number">1.0</literal></expr>)</condition><then> 
+    <block>{
+        <for>for <control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>nvar</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+        <block>{
+            <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>&lt;=</operator><literal type="number">0.5</literal></expr> )</condition><then>
+            <block>{
+                <if>if <condition>(<expr><call><name>fabs</name><argument_list>(<argument><expr><name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name><operator>-</operator><name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr></argument>)</argument_list></call> <operator>&gt;</operator> <name>EPS</name></expr>)</condition><then>
+                <block>{
+                    <if>if <condition>(<expr><name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&lt;</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>y1</name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name>y2</name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>y1</name> <operator>=</operator> <name><name>parent2</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                        <expr_stmt><expr><name>y2</name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>yl</name> <operator>=</operator> <name>lowBound</name></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>yu</name> <operator>=</operator> <name>uppBound</name></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>rand</name> <operator>=</operator> <call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>beta</name> <operator>=</operator> <literal type="number">1.0</literal> <operator>+</operator> <operator>(</operator><literal type="number">2.0</literal><operator>*</operator><operator>(</operator><name>y1</name><operator>-</operator><name>yl</name><operator>)</operator><operator>/</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>alpha</name> <operator>=</operator> <literal type="number">2.0</literal> <operator>-</operator> <call><name>pow</name><argument_list>(<argument><expr><name>beta</name></expr></argument>,<argument><expr><operator>-</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>rand</name> <operator>&lt;=</operator> <operator>(</operator><literal type="number">1.0</literal><operator>/</operator><name>alpha</name><operator>)</operator></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><literal type="number">2.0</literal> <operator>-</operator> <name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>c1</name> <operator>=</operator> <literal type="number">0.5</literal><operator>*</operator><operator>(</operator><operator>(</operator><name>y1</name><operator>+</operator><name>y2</name><operator>)</operator><operator>-</operator><name>betaq</name><operator>*</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>beta</name> <operator>=</operator> <literal type="number">1.0</literal> <operator>+</operator> <operator>(</operator><literal type="number">2.0</literal><operator>*</operator><operator>(</operator><name>yu</name><operator>-</operator><name>y2</name><operator>)</operator><operator>/</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <expr_stmt><expr><name>alpha</name> <operator>=</operator> <literal type="number">2.0</literal> <operator>-</operator> <call><name>pow</name><argument_list>(<argument><expr><name>beta</name></expr></argument>,<argument><expr><operator>-</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>rand</name> <operator>&lt;=</operator> <operator>(</operator><literal type="number">1.0</literal><operator>/</operator><name>alpha</name><operator>)</operator></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name>betaq</name> <operator>=</operator> <call><name>pow</name> <argument_list>(<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><literal type="number">2.0</literal> <operator>-</operator> <name>rand</name><operator>*</operator><name>alpha</name><operator>)</operator><operator>)</operator></expr></argument>,<argument><expr><operator>(</operator><literal type="number">1.0</literal><operator>/</operator><operator>(</operator><name>eta_c</name><operator>+</operator><literal type="number">1.0</literal><operator>)</operator><operator>)</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+                    }</block></else></if>
+                    <expr_stmt><expr><name>c2</name> <operator>=</operator> <literal type="number">0.5</literal><operator>*</operator><operator>(</operator><operator>(</operator><name>y1</name><operator>+</operator><name>y2</name><operator>)</operator><operator>+</operator><name>betaq</name><operator>*</operator><operator>(</operator><name>y2</name><operator>-</operator><name>y1</name><operator>)</operator><operator>)</operator></expr>;</expr_stmt>
+                    <if>if <condition>(<expr><name>c1</name><operator>&lt;</operator><name>yl</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c1</name><operator>=</operator><name>yl</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c2</name><operator>&lt;</operator><name>yl</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c2</name><operator>=</operator><name>yl</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c1</name><operator>&gt;</operator><name>yu</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c1</name><operator>=</operator><name>yu</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><name>c2</name><operator>&gt;</operator><name>yu</name></expr>)</condition><then>
+                        <block type="pseudo"><expr_stmt><expr><name>c2</name><operator>=</operator><name>yu</name></expr>;</expr_stmt></block></then></if>
+                    <if>if <condition>(<expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>&lt;=</operator><literal type="number">0.5</literal></expr>)</condition><then>
+                    <block>{
+                        <expr_stmt><expr><name><name>child</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c2</name></expr>;</expr_stmt>
+                    }</block></then>
+                    <else>else
+                    <block>{
+                        <expr_stmt><expr><name><name>child</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>c1</name></expr>;</expr_stmt>
+                    }</block></else></if>
+                }</block></then>
+                <else>else
+                <block>{
+                    <expr_stmt><expr><name><name>child</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                }</block></else></if>
+            }</block></then>
+            <else>else
+            <block>{
+                <expr_stmt><expr><name><name>child</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+            }</block></else></if>
+        }</block></for>
+    }</block></then>
+    <else>else
+    <block>{
+        <for>for <control>(<init><decl><type><name>int</name></type> <name>i</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init> <condition><expr><name>i</name><operator>&lt;</operator><name>nvar</name></expr>;</condition> <incr><expr><name>i</name><operator>++</operator></expr></incr>)</control>
+        <block>{
+            <expr_stmt><expr><name><name>child</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name><name>parent1</name><operator>.</operator><name>x_var</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+        }</block></for>
+    }</block></else></if>
+    <return>return;</return>
+}</block></function>
+
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>diff_evo_xover</name><parameter_list>(<parameter><decl><type><name>T</name></type> <name>ind0</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind1</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind2</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind3</name></decl></parameter>, <parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>new_ind</name></decl></parameter>, <parameter><decl><type><name>double</name></type> <name>rate</name></decl></parameter>)</parameter_list>
+<block>{
+
+  <comment type="line">// Check Whether the cross-over to be performed</comment>
+	  <comment type="block">/*Loop over no of variables*/</comment>
+	  <decl_stmt><decl><type><name>int</name></type> <name>idx_rnd</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>*</operator><name>nvar</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+	  <for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>n</name><operator>&lt;</operator><name>nvar</name></expr>;</condition><incr><expr><name>n</name><operator>++</operator></expr></incr>)</control><block>{
+		  <comment type="block">/*Selected Two Parents*/</comment>
+
+		  <decl_stmt><decl><type><name>double</name></type> <name>rnd</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+		  <if>if<condition>(<expr><name>rnd</name><operator>&lt;</operator><literal type="number">1</literal><operator>||</operator><name>n</name><operator>==</operator><name>idx_rnd</name></expr>)</condition><then>
+			  <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind1</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>+</operator> <name>rate</name><operator>*</operator><operator>(</operator><name><name>ind2</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>-</operator> <name><name>ind3</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>)</operator></expr>;</expr_stmt></block></then>
+		  <else>else
+		      <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name></expr>;</expr_stmt></block></else></if>
+
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&lt;</operator><name>lowBound</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>lowBound</name></expr>;</expr_stmt></block></then></if>
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&gt;</operator><name>uppBound</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>uppBound</name></expr>;</expr_stmt></block></then></if>
+	  }</block></for>
+}</block></function>
+
+
+
+
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>diff_evo_xover2</name><parameter_list>(<parameter><decl><type><name>T</name></type> <name>ind0</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind1</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind2</name></decl></parameter>, <parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>new_ind</name></decl></parameter>)</parameter_list>
+<block>{
+
+	<decl_stmt><decl><type><name>int</name></type> <name>idx_rnd</name> <init>= <expr><call><name>int</name><argument_list>(<argument><expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call><operator>*</operator><name>nvar</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+
+	<decl_stmt><decl><type><name>double</name></type> <name>rate</name> <init>= <expr><literal type="number">0.5</literal></expr></init></decl>;</decl_stmt>
+
+	  <for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>n</name><operator>&lt;</operator><name>nvar</name></expr>;</condition><incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	  <block>{
+		  <comment type="block">/*Selected Two Parents*/</comment>
+
+		  <expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>+</operator> <name>rate</name><operator>*</operator><operator>(</operator><name><name>ind2</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>-</operator> <name><name>ind1</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>)</operator></expr>;</expr_stmt>
+
+		  <comment type="block">/*
+		  double rnd1 = rnd_uni(&amp;rnd_uni_init);
+		  if(rnd1&lt;0.9||n==idx_rnd)
+		  //if(rnd1&lt;1.0||n==idx_rnd)
+			  new_ind.x_var[n] = ind0.x_var[n] + rate*(ind2.x_var[n] - ind1.x_var[n]);
+		  else
+		      new_ind.x_var[n] = ind0.x_var[n];
+		  //*/</comment>
+
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&lt;</operator><name>lowBound</name></expr>)</condition><then><block>{
+			  <decl_stmt><decl><type><name>double</name></type> <name>rnd</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+			  <expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>lowBound</name> <operator>+</operator> <name>rnd</name><operator>*</operator><operator>(</operator><name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>-</operator> <name>lowBound</name><operator>)</operator></expr>;</expr_stmt>
+		  }</block></then></if>
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&gt;</operator><name>uppBound</name></expr>)</condition><then><block>{ 
+			  <decl_stmt><decl><type><name>double</name></type> <name>rnd</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+			  <expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>uppBound</name> <operator>-</operator> <name>rnd</name><operator>*</operator><operator>(</operator><name>uppBound</name> <operator>-</operator> <name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>)</operator></expr>;</expr_stmt>
+		  }</block></then></if>
+	
+		  <comment type="line">//if(new_ind.x_var[n]&lt;lowBound) new_ind.x_var[n] = lowBound;</comment>
+		  <comment type="line">//if(new_ind.x_var[n]&gt;uppBound) new_ind.x_var[n] = uppBound;</comment>
+	  }</block></for>
+}</block></function>
+
+<function><template>template <parameter_list>&lt;<parameter><type><name>class</name></type> <name>T</name></parameter>&gt;</parameter_list></template>
+<type><name>void</name></type> <name>diff_evo_xover3</name><parameter_list>(<parameter><decl><type><name>T</name></type> <name>ind0</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind1</name></decl></parameter>, <parameter><decl><type><name>T</name></type> <name>ind2</name></decl></parameter>, <parameter><decl><type><name><name>vector</name><argument_list type="generic">&lt;<argument><expr><name>double</name></expr></argument>&gt;</argument_list></name> <modifier>&amp;</modifier></type><name>xdiff</name></decl></parameter>,<parameter><decl><type><name>T</name><modifier>&amp;</modifier></type> <name>new_ind</name></decl></parameter>,  <parameter><decl><type><name>double</name></type> <name>rate</name></decl></parameter>)</parameter_list>
+<block>{
+      <decl_stmt><decl><type><name>double</name></type> <name>rnd</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>, <decl><type ref="prev"/><name>rnd2</name> <init>= <expr><call><name>rnd_uni</name><argument_list>(<argument><expr><operator>&amp;</operator><name>rnd_uni_init</name></expr></argument>)</argument_list></call></expr></init></decl>;</decl_stmt>
+	  <for>for<control>(<init><decl><type><name>int</name></type> <name>n</name><init>=<expr><literal type="number">0</literal></expr></init></decl>;</init><condition><expr><name>n</name><operator>&lt;</operator><name>nvar</name></expr>;</condition><incr><expr><name>n</name><operator>++</operator></expr></incr>)</control>
+	  <block>{
+		  <comment type="block">/*Selected Two Parents*/</comment>
+		  
+		  <if>if<condition>(<expr><name>rnd</name><operator>&lt;</operator><literal type="number">1</literal></expr>)</condition><then>
+		      <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>+</operator> <name>rate</name><operator>*</operator><operator>(</operator><name><name>ind2</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>-</operator> <name><name>ind1</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>)</operator></expr>;</expr_stmt></block></then>
+		  <else>else
+			  <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name><name>ind0</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>+</operator> <name>rnd2</name><operator>*</operator><name><name>xdiff</name><index>[<expr><name>n</name></expr>]</index></name></expr>;</expr_stmt></block></else></if>
+	
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&lt;</operator><name>lowBound</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>lowBound</name></expr>;</expr_stmt></block></then></if>
+		  <if>if<condition>(<expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name><operator>&gt;</operator><name>uppBound</name></expr>)</condition><then> <block type="pseudo"><expr_stmt><expr><name><name>new_ind</name><operator>.</operator><name>x_var</name><index>[<expr><name>n</name></expr>]</index></name> <operator>=</operator> <name>uppBound</name></expr>;</expr_stmt></block></then></if>
+	  }</block></for>
+}</block></function>
+<cpp:endif>#<cpp:directive>endif</cpp:directive></cpp:endif>
+</unit>

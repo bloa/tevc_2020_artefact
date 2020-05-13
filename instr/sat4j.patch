@@ -1,0 +1,12 @@
+diff -ru a/sat4j/org.sat4j.core/src/main/java/org/sat4j/reader/LecteurDimacs.java b/sat4j/org.sat4j.core/src/main/java/org/sat4j/reader/LecteurDimacs.java
+--- a/sat4j/org.sat4j.core/src/main/java/org/sat4j/reader/LecteurDimacs.java	2020-05-09 19:23:48.000000000 +0100
++++ b/sat4j/org.sat4j.core/src/main/java/org/sat4j/reader/LecteurDimacs.java	2020-05-09 19:27:41.430419980 +0100
+@@ -200,6 +200,8 @@
+             if (car >= '0' && car <= '9') {
+                 val = car - '0';
+                 car = (char) this.in.read();
++            } else if (car == '%') {
++                break;
+             } else {
+                 throw new ParseFormatException("Unknown character " + car);
+             }

@@ -1,0 +1,726 @@
+diff -rc a/moead-2007/common/common.h b/moead-2007/common/common.h
+*** a/moead-2007/common/common.h	2007-06-11 01:34:16.935829100 +0100
+--- b/moead-2007/common/common.h	2019-12-11 21:23:14.659157263 +0000
+***************
+*** 1,8 ****
+  #ifndef __COMMON_H_
+  #define __COMMON_H_
+  
+! #include "..\common\global.h"
+! #include "..\common\mylib.h"
+  
+  template <class T>
+  void loadpfront(char *filename, vector<T> &ps)
+--- 1,8 ----
+  #ifndef __COMMON_H_
+  #define __COMMON_H_
+  
+! #include "../common/global.h"
+! #include "../common/mylib.h"
+  
+  template <class T>
+  void loadpfront(char *filename, vector<T> &ps)
+***************
+*** 142,154 ****
+  
+  		// normalization
+  		double nd = norm_vector(norm);
+! 		for(i=0; i<nobj; i++)
+  			norm[i] = norm[i]/nd;
+  
+  
+  		// reference point in the CHIM
+  		vector <double> base;
+! 		for(i=0; i<nobj; i++)
+  		{
+  			double tp2 = 0;
+  			for(int j=0; j<nobj; j++)
+--- 142,154 ----
+  
+  		// normalization
+  		double nd = norm_vector(norm);
+! 		for(int i=0; i<nobj; i++)
+  			norm[i] = norm[i]/nd;
+  
+  
+  		// reference point in the CHIM
+  		vector <double> base;
+! 		for(int i=0; i<nobj; i++)
+  		{
+  			double tp2 = 0;
+  			for(int j=0; j<nobj; j++)
+***************
+*** 192,198 ****
+  		//double d1 = prod_vector(realA,norm);
+  
+  		// distance to the search direction norm
+! 		for(n=0; n<nobj; n++)
+  			realB[n] = (y_obj[n] - (idealpoint[n] + d1*namda[n]));
+  		double d2 = norm_vector(realB);
+  
+--- 192,198 ----
+  		//double d1 = prod_vector(realA,norm);
+  
+  		// distance to the search direction norm
+! 		for(int n=0; n<nobj; n++)
+  			realB[n] = (y_obj[n] - (idealpoint[n] + d1*namda[n]));
+  		double d2 = norm_vector(realB);
+  
+***************
+*** 217,230 ****
+  
+  		// normalization
+  		double nd = norm_vector(norm);
+! 		for(i=0; i<nobj; i++){
+  			norm[i] = norm[i]/nd;
+  		}
+  
+  
+  		// reference point in the CHIM
+  		vector <double> base;
+! 		for(i=0; i<nobj; i++)
+  		{
+  			double tp2 = 0;
+  			for(int j=0; j<nobj; j++)
+--- 217,230 ----
+  
+  		// normalization
+  		double nd = norm_vector(norm);
+! 		for(int i=0; i<nobj; i++){
+  			norm[i] = norm[i]/nd;
+  		}
+  
+  
+  		// reference point in the CHIM
+  		vector <double> base;
+! 		for(int i=0; i<nobj; i++)
+  		{
+  			double tp2 = 0;
+  			for(int j=0; j<nobj; j++)
+***************
+*** 245,251 ****
+  		double d1 = prod_vector(realA,norm);
+  
+  		// distance to the search direction norm
+! 		for(n=0; n<nobj; n++)
+  			realB.push_back(y_obj[n] - (base[n] + d1*norm[n]));
+  		double d2 = norm_vector(realB);
+  
+--- 245,251 ----
+  		double d1 = prod_vector(realA,norm);
+  
+  		// distance to the search direction norm
+! 		for(int n=0; n<nobj; n++)
+  			realB.push_back(y_obj[n] - (base[n] + d1*norm[n]));
+  		double d2 = norm_vector(realB);
+  
+***************
+*** 287,290 ****
+  
+  }
+  
+! #endif
+\ No newline at end of file
+--- 287,290 ----
+  
+  }
+  
+! #endif
+diff -rc a/moead-2007/common/global.h b/moead-2007/common/global.h
+*** a/moead-2007/common/global.h	2007-10-29 12:15:11.273160700 +0000
+--- b/moead-2007/common/global.h	2019-12-11 21:19:31.955811925 +0000
+***************
+*** 17,23 ****
+  
+  #define pi 3.1415926
+  
+! #include "..\common\random.h"
+  
+  
+  //******** Parameters in test instance *********************************************
+--- 17,23 ----
+  
+  #define pi 3.1415926
+  
+! #include "../common/random.h"
+  
+  
+  //******** Parameters in test instance *********************************************
+***************
+*** 66,69 ****
+  int     gID;
+  //**********************************************************************************
+  
+! #endif
+\ No newline at end of file
+--- 66,69 ----
+  int     gID;
+  //**********************************************************************************
+  
+! #endif
+diff -rc a/moead-2007/common/objective.h b/moead-2007/common/objective.h
+*** a/moead-2007/common/objective.h	2007-10-29 11:26:48.605104300 +0000
+--- b/moead-2007/common/objective.h	2019-12-11 21:19:40.469145714 +0000
+***************
+*** 1,7 ****
+  #ifndef __OBJECTIVE_H_
+  #define __OBJECTIVE_H_
+  
+! #include "..\common\global.h"
+  
+  // control the PF shape
+  void alphafunction(double alpha[], vector<double>&x, int dim, int type)
+--- 1,7 ----
+  #ifndef __OBJECTIVE_H_
+  #define __OBJECTIVE_H_
+  
+! #include "../common/global.h"
+  
+  // control the PF shape
+  void alphafunction(double alpha[], vector<double>&x, int dim, int type)
+***************
+*** 301,304 ****
+  }
+  
+  
+! #endif
+\ No newline at end of file
+--- 301,304 ----
+  }
+  
+  
+! #endif
+diff -rc a/moead-2007/common/recombination.h b/moead-2007/common/recombination.h
+*** a/moead-2007/common/recombination.h	2007-10-18 13:54:26.377925600 +0100
+--- b/moead-2007/common/recombination.h	2019-12-11 21:18:35.239142202 +0000
+***************
+*** 1,7 ****
+  #ifndef _RECOMBINATION_H_
+  #define _RECOMBINATION_H_
+  
+! #include "..\common\global.h"
+  
+  /* Routine for real polynomial mutation of an T */
+  template <class T>
+--- 1,7 ----
+  #ifndef _RECOMBINATION_H_
+  #define _RECOMBINATION_H_
+  
+! #include "../common/global.h"
+  
+  /* Routine for real polynomial mutation of an T */
+  template <class T>
+***************
+*** 311,314 ****
+  		  if(new_ind.x_var[n]>uppBound) new_ind.x_var[n] = uppBound;
+  	  }
+  }
+! #endif
+\ No newline at end of file
+--- 311,314 ----
+  		  if(new_ind.x_var[n]>uppBound) new_ind.x_var[n] = uppBound;
+  	  }
+  }
+! #endif
+Only in b/moead-2007/common: recombination.h.xml
+diff -rc a/moead-2007/DMOEA/dmoeaclass.h b/moead-2007/DMOEA/dmoeaclass.h
+*** a/moead-2007/DMOEA/dmoeaclass.h	2007-10-29 11:36:35.745134700 +0000
+--- b/moead-2007/DMOEA/dmoeaclass.h	2019-12-11 21:20:12.679147455 +0000
+***************
+*** 1,8 ****
+  #ifndef __INDIVIDUAL_H_
+  #define __INDIVIDUAL_H_
+  
+! #include "..\common\global.h"
+! #include "..\common\objective.h"
+  
+  class CMOEADInd{
+  public:
+--- 1,8 ----
+  #ifndef __INDIVIDUAL_H_
+  #define __INDIVIDUAL_H_
+  
+! #include "../common/global.h"
+! #include "../common/objective.h"
+  
+  class CMOEADInd{
+  public:
+***************
+*** 145,148 ****
+  }
+  
+  
+! #endif
+\ No newline at end of file
+--- 145,148 ----
+  }
+  
+  
+! #endif
+diff -rc a/moead-2007/DMOEA/dmoeafunc.h b/moead-2007/DMOEA/dmoeafunc.h
+*** a/moead-2007/DMOEA/dmoeafunc.h	2007-10-29 12:18:31.137652100 +0000
+--- b/moead-2007/DMOEA/dmoeafunc.h	2019-12-11 21:20:06.419147116 +0000
+***************
+*** 1,9 ****
+  #ifndef __EVOLUTION_H_
+  #define __EVOLUTION_H_
+  
+! #include "..\common\global.h"
+! #include "..\common\recombination.h"
+! #include "..\common\common.h"
+  #include "dmoeaclass.h"
+  
+  
+--- 1,9 ----
+  #ifndef __EVOLUTION_H_
+  #define __EVOLUTION_H_
+  
+! #include "../common/global.h"
+! #include "../common/recombination.h"
+! #include "../common/common.h"
+  #include "dmoeaclass.h"
+  
+  
+***************
+*** 389,392 ****
+  	distance/=ps.size();
+  }
+  
+! #endif
+\ No newline at end of file
+--- 389,392 ----
+  	distance/=ps.size();
+  }
+  
+! #endif
+Only in b/moead-2007/DMOEA: dmoeafunc.h.xml
+Only in b/moead-2007/GD: GD_DMOEA_P21D1L21.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D1L22.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D1L23.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D1L24.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D1L26.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D3L21.dat
+Only in b/moead-2007/GD: GD_DMOEA_P21D4L21.dat
+Only in b/moead-2007/GD: GD_DMOEA_P22D1L22.dat
+Only in b/moead-2007/GD: GD_DMOEA_P31D1L32.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D1L21.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D1L22.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D1L23.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D1L24.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D1L26.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D3L21.dat
+Only in b/moead-2007/GD: GD_NSGA2_P21D4L21.dat
+Only in b/moead-2007/GD: GD_NSGA2_P22D1L22.dat
+Only in b/moead-2007/GD: GD_NSGA2_P31D1L32.dat
+Only in b/moead-2007: main_moea
+diff -rc a/moead-2007/main_moea.cpp b/moead-2007/main_moea.cpp
+*** a/moead-2007/main_moea.cpp	2007-10-29 12:15:35.617533900 +0000
+--- b/moead-2007/main_moea.cpp	2020-05-05 17:04:22.733582068 +0100
+***************
+*** 15,94 ****
+  //  Qingfu Zhang at qzhang@essex.ac.uk  or Hui Li at hzl@cs.nott.ac.uk
+  ===========================================================================*/
+  
+  
+! #include "common\global.h"
+! #include "DMOEA\dmoeafunc.h"
+! #include "NSGA2\nsga2func.h"
+  
+  void execute(char *alg);
+  
+! void main()
+! {
+! 
+! 	// The settings of test instances F1-F9
+! 	// char *ins[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"}
+! 	int pof[]      = {  21,   21,   21,   21,   21,   31,   21,   21,  22};       // type of pareto front       
+! 	int pos[]      = {  21,   22,   23,   24,   26,   32,   21,   21,  22};       // type of pareto set
+! 	int dis[]      = {   1,    1,    1,    1,    1,    1,    3,    4,   1};       // type of non-negative function
+! 	int var[]      = {  30,   30,   30,   30,   30,   10,   10,   10,  30};       // dimensionality of search space
+! 	int obj[]      = {   2,    2,    2,    2,    2,    3,    2,    2,   2};       // number of objective functions 
+! 
+! 	// The settings of algorithms
+! 	int pop[] = {300, 300, 300, 300, 300, 595, 300, 300, 300};     // population size
+! 	int gen[] = {500, 500, 500, 500, 500, 500, 500, 500, 500};     // number of generations 
+! 
+! 	
+! 	for(int i=0; i<9; i++)
+! 	{
+! 		// the parameter setting of test instance
+! 		dtype = dis[i]; 
+! 		ptype = pof[i];  
+! 		ltype = pos[i];                  
+! 		nvar  = var[i];
+! 		nobj  = obj[i];
+! 
+! 
+! 		// the parameter setting of MOEA/D-DE and 
+! 		pops    = pop[i];
+! 		max_gen = gen[i];
+! 
+! 		sprintf(strTestInstance,"P%dD%dL%d",ptype, dtype, ltype);
+! 		printf("Instances: pf shape %d  - distance %d, - ps shape %d \n ", ptype, dtype, ltype);
+! 		execute("DMOEA");
+  
+! 		// or execute("NSGA-II");
+! 	}
+  }
+  
+! void execute(char *alg)
+! {
+! 	std::fstream fout;
+! 	char filename[1024];
+! 	// compute IGD-values
+! 	if(strcmp(alg,"DMOEA")==0)
+! 	    sprintf(filename,"GD/GD_DMOEA_%s.dat",strTestInstance);
+! 	else
+! 	    sprintf(filename,"GD/GD_NSGA2_%s.dat",strTestInstance);
+! 
+! 	fout.open(filename,std::ios::out);
+! 
+! 	for(int run=1; run<=max_run; run++) 
+! 	{				
+! 		vector<double> gd;
+! 		if(strcmp(alg,"DMOEA")==0)
+! 		{		
+! 			CMOEAD  MOEAD;  
+! 			gd = MOEAD.execute(run, "_TCHE1", "_DE");  
+! 		}
+! 		else
+! 		{
+! 		    CNSGA2  NSGA2;
+! 		    gd = NSGA2.execute(run);  
+! 		}
+! 		for(int k=0; k<gd.size(); k++)
+! 			fout<<gd[k]<<" ";
+! 		fout<<"\n";
+! 		gd.clear();
+! 	}
+! 	fout.close();
+! }
+\ No newline at end of file
+--- 15,130 ----
+  //  Qingfu Zhang at qzhang@essex.ac.uk  or Hui Li at hzl@cs.nott.ac.uk
+  ===========================================================================*/
+  
++ #include <cassert>
++ #include <cstdlib>
+  
+! #include "common/global.h"
+! #include "DMOEA/dmoeafunc.h"
+! #include "NSGA2/nsga2func.h"
+  
+  void execute(char *alg);
++ void reassess(char *alg);
+  
+! int main(int argc, char **argv) {
+!   // Argument parsing (inst, seed, algo flag, reassess flag)
+!   assert(argc == 5);
+!   int instance = atoi(argv[1]);
+!   assert(instance >= 0 && instance < 9);
+!   seed = atoi(argv[2]);
+!   bool use_moead = atoi(argv[3]);
+!   bool exe_or_reassess = atoi(argv[4]);
+! 
+!   // The settings of test instances F1-F9
+!   // char *ins[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"}
+!   int pof[]      = {  21,   21,   21,   21,   21,   31,   21,   21,  22};       // type of pareto front
+!   int pos[]      = {  21,   22,   23,   24,   26,   32,   21,   21,  22};       // type of pareto set
+!   int dis[]      = {   1,    1,    1,    1,    1,    1,    3,    4,   1};       // type of non-negative function
+!   int var[]      = {  30,   30,   30,   30,   30,   10,   10,   10,  30};       // dimensionality of search space
+!   int obj[]      = {   2,    2,    2,    2,    2,    3,    2,    2,   2};       // number of objective functions
+! 
+!   // The settings of algorithms
+!   int pop[] = {300, 300, 300, 300, 300, 595, 300, 300, 300};     // population size
+!   int gen[] = {500, 500, 500, 500, 500, 500, 500, 500, 500};     // number of generations
+! 
+!   // the parameter setting of test instance
+!   dtype = dis[instance];
+!   ptype = pof[instance];
+!   ltype = pos[instance];
+!   nvar  = var[instance];
+!   nobj  = obj[instance];
+! 
+!   // the parameter setting of MOEA/D-DE and
+!   pops    = pop[instance];
+!   max_gen = gen[instance];
+! 
+!   sprintf(strTestInstance,"P%dD%dL%d",ptype, dtype, ltype);
+!   printf("Instances: pf shape %d  - distance %d, - ps shape %d \n ", ptype, dtype, ltype);
+! 
+!   if (exe_or_reassess) {
+!     if (use_moead)
+!       execute("DMOEA");
+!     else
+!       execute("NSGA-II");
+!   } else {
+!     if (use_moead)
+!       reassess("DMOEA");
+!     else
+!       reassess("NSGA-II");
+!   }
+! }
+  
+! void execute(char *alg) {
+!   std::fstream fout;
+!   char filename[1024];
+!   // compute IGD-values
+!   if (strcmp(alg,"DMOEA")==0)
+!     sprintf(filename,"GD/GD_DMOEA_%s.dat",strTestInstance);
+!   else
+!     sprintf(filename,"GD/GD_NSGA2_%s.dat",strTestInstance);
+! 
+!   fout.open(filename,std::ios::out);
+! 
+!   for (int run=1; run<=max_run; run++) {
+!       vector<double> gd;
+!       if (strcmp(alg,"DMOEA")==0) {
+!           CMOEAD  MOEAD;
+!           gd = MOEAD.execute(run, "_TCHE1", "_DE");
+!       } else {
+!         CNSGA2  NSGA2;
+!         gd = NSGA2.execute(run);
+!       }
+!       for (int k=0; k<gd.size(); k++)
+!         fout<<gd[k]<<" ";
+!       fout<<"\n";
+!       gd.clear();
+!     }
+!   fout.close();
+  }
+  
+! void reassess(char *alg) {
+!   char filename[1024];
+!   vector <CMOEADInd>  ps, pf;
+!   double distance = 0;
+!   int run = 1;
+! 
+!   sprintf(filename, "PF/pf_%s.dat", strTestInstance);
+!   loadpfront(filename, ps);
+! 
+!   if (strcmp(alg, "DMOEA")==0)
+!     sprintf(filename, "POF/PF_DMOEA_%s_R%d_G%d.dat", strTestInstance, run, max_gen);
+!   else
+!     sprintf(filename, "POF/PF_NSGA2_%s_R%d_G%d.dat", strTestInstance, run, max_gen);
+!   loadpfront(filename, pf);
+! 
+!   for (int i=0; i<ps.size(); i++) {
+!     double min_d = 1.0e+10;
+!     for (int j=0; j<pf.size(); j++) {
+!       double d = dist_vector(ps[i].y_obj, pf[j].y_obj);
+!       if (d<min_d)
+!         min_d = d;
+!     }
+!     distance += min_d;
+!   }
+!   distance /= ps.size();
+!   std::cout << "Final reassess: " << distance << std::endl;
+! }
+Only in b/moead-2007: MOEA-D-DE.rar
+diff -rc a/moead-2007/NSGA2/nsga2class.h b/moead-2007/NSGA2/nsga2class.h
+*** a/moead-2007/NSGA2/nsga2class.h	2007-10-29 11:07:17.684504500 +0000
+--- b/moead-2007/NSGA2/nsga2class.h	2019-12-11 21:24:33.992494878 +0000
+***************
+*** 1,8 ****
+  #ifndef __INDIVIDUAL__H_
+  #define __INDIVIDUAL__H_
+  
+! #include "..\common\global.h"
+! #include "..\common\objective.h"
+  
+  class CNSGA2Ind{
+  public:
+--- 1,8 ----
+  #ifndef __INDIVIDUAL__H_
+  #define __INDIVIDUAL__H_
+  
+! #include "../common/global.h"
+! #include "../common/objective.h"
+  
+  class CNSGA2Ind{
+  public:
+***************
+*** 94,102 ****
+  	for(int n=0;n<nobj;n++)
+  	    y_obj[n] = ind2.y_obj[n];
+  
+! 	for(n=0;n<nvar;n++)
+  	    x_var[n] = ind2.x_var[n];
+      rank  = ind2.rank;
+  }
+  
+! #endif
+\ No newline at end of file
+--- 94,102 ----
+  	for(int n=0;n<nobj;n++)
+  	    y_obj[n] = ind2.y_obj[n];
+  
+! 	for(int n=0;n<nvar;n++)
+  	    x_var[n] = ind2.x_var[n];
+      rank  = ind2.rank;
+  }
+  
+! #endif
+diff -rc a/moead-2007/NSGA2/nsga2func.h b/moead-2007/NSGA2/nsga2func.h
+*** a/moead-2007/NSGA2/nsga2func.h	2007-10-29 11:59:10.748571900 +0000
+--- b/moead-2007/NSGA2/nsga2func.h	2019-12-11 21:24:09.472493555 +0000
+***************
+*** 1,9 ****
+  #ifndef __CNSGA2CLASS_H_
+  #define __CNSGA2CLASS_H_
+  
+! #include "..\common\global.h"
+! #include "..\common\recombination.h"
+! #include "..\common\common.h"
+  #include "nsga2class.h"
+  
+  class CNSGA2    
+--- 1,9 ----
+  #ifndef __CNSGA2CLASS_H_
+  #define __CNSGA2CLASS_H_
+  
+! #include "../common/global.h"
+! #include "../common/recombination.h"
+! #include "../common/common.h"
+  #include "nsga2class.h"
+  
+  class CNSGA2    
+***************
+*** 120,126 ****
+      for(int i=0; i<size; i++) 
+          cset[i] = new int[size];
+  
+!     for(i=0; i<size; i++) 
+  	{
+  		rank[i]  = 0;
+  		offspring[i].rank  = -1;
+--- 120,126 ----
+      for(int i=0; i<size; i++) 
+          cset[i] = new int[size];
+  
+!     for(int i=0; i<size; i++) 
+  	{
+  		rank[i]  = 0;
+  		offspring[i].rank  = -1;
+***************
+*** 152,158 ****
+  	    for(int k=0; k<size; k++)
+  			rank2[k] = rank[k];
+  
+!         for(k=0; k<size; k++)
+  		{			
+  		    if(offspring[k].rank==-1&&rank[k]==0)
+  			{
+--- 152,158 ----
+  	    for(int k=0; k<size; k++)
+  			rank2[k] = rank[k];
+  
+!         for(int k=0; k<size; k++)
+  		{			
+  		    if(offspring[k].rank==-1&&rank[k]==0)
+  			{
+***************
+*** 166,172 ****
+  			}						
+  		}
+  
+! 	    for(k=0; k<size; k++)
+  			rank[k] = rank2[k];
+  
+          delete [] rank2;
+--- 166,172 ----
+  			}						
+  		}
+  
+! 	    for(int k=0; k<size; k++)
+  			rank[k] = rank2[k];
+  
+          delete [] rank2;
+***************
+*** 176,182 ****
+  
+      delete [] rank;
+  
+!     for(i=0; i<size; i++) 
+          delete cset[i];
+  	delete[] cset;
+  }
+--- 176,182 ----
+  
+      delete [] rank;
+  
+!     for(int i=0; i<size; i++) 
+          delete cset[i];
+  	delete[] cset;
+  }
+***************
+*** 197,203 ****
+  			break;
+  		}
+  
+!         for(i=0; i<size; i++)
+    	        if(offspring[i].rank==rank)
+  			    population.push_back(offspring[i]);
+  		rank++;
+--- 197,203 ----
+  			break;
+  		}
+  
+!         for(int i=0; i<size; i++)
+    	        if(offspring[i].rank==rank)
+  			    population.push_back(offspring[i]);
+  		rank++;
+***************
+*** 214,220 ****
+  		double *density = new double[s2];
+  		int    *idx     = new int[s2];
+  	
+! 		for(i=0; i<s2; i++){
+  			idx[i]     = i;
+  			density[i] = 0;
+  		}
+--- 214,220 ----
+  		double *density = new double[s2];
+  		int    *idx     = new int[s2];
+  	
+! 		for(int i=0; i<s2; i++){
+  			idx[i]     = i;
+  			density[i] = 0;
+  		}
+***************
+*** 239,245 ****
+  
+  		minfastsort(density,idx,s2,s3);
+  
+! 		for(i=0; i<s3; i++)
+  			population.push_back(list[idx[i]]);
+  
+  		delete [] density;
+--- 239,245 ----
+  
+  		minfastsort(density,idx,s2,s3);
+  
+! 		for(int i=0; i<s3; i++)
+  			population.push_back(list[idx[i]]);
+  
+  		delete [] density;
+***************
+*** 269,275 ****
+  	gd.push_back(0);  gd.push_back(distance);
+  
+  	
+! 	for(gen=2; gen<=max_gen; gen++)
+  	{
+  	    diffevolution();
+  		rank_popu();
+--- 269,275 ----
+  	gd.push_back(0);  gd.push_back(distance);
+  
+  	
+! 	for(int gen=2; gen<=max_gen; gen++)
+  	{
+  	    diffevolution();
+  		rank_popu();
+Only in b/moead-2007/NSGA2: nsga2func.h.xml
+Only in b/moead-2007/POF: PF_DMOEA_P21D1L21_R1_G500.dat
+Only in b/moead-2007/POS: PS_DMOEA_P21D1L21_R1_G500.dat

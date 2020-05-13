@@ -1,0 +1,320 @@
+diff -ru a/pyggi/pyggi/base/patch.py b/pyggi/pyggi/base/patch.py
+--- a/pyggi/pyggi/base/patch.py	2020-05-09 19:42:37.960435610 +0100
++++ b/pyggi/pyggi/base/patch.py	2020-01-10 19:13:47.767116276 +0000
+@@ -20,13 +20,16 @@
+         self.edit_list = []
+ 
+     def __str__(self):
+-        return ' | '.join(list(map(str, self.edit_list)))
++        return ' | '.join(map(str, self.edit_list))
+ 
+     def __len__(self):
+         return len(self.edit_list)
+ 
+     def __eq__(self, other):
+-        return self.edit_list == other.edit_list
++        return isinstance(other, Patch) and self.edit_list == other.edit_list
++
++    def __hash__(self):
++        return hash(str(self))
+ 
+     def clone(self):
+         """
+diff -ru a/pyggi/pyggi/base/program.py b/pyggi/pyggi/base/program.py
+--- a/pyggi/pyggi/base/program.py	2020-05-09 19:42:37.960435610 +0100
++++ b/pyggi/pyggi/base/program.py	2020-03-02 14:26:09.440429548 +0000
+@@ -15,6 +15,9 @@
+ import shlex
+ import copy
+ import difflib
++import errno
++import select
++import signal
+ from abc import ABC, abstractmethod
+ from distutils.dir_util import copy_tree
+ from .. import PYGGI_DIR
+@@ -207,8 +210,23 @@
+         pathlib.Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+         copy_tree(self.path, self.tmp_path)
+ 
+-    def remove_tmp_variant(self):
++    def reset_tmp_variant(self):
+         shutil.rmtree(self.tmp_path)
++        shutil.copytree(self.path, self.tmp_path)
++
++    def remove_tmp_variant(self):
++        tmp = self.tmp_path
++        shutil.rmtree(tmp, ignore_errors=True)
++        bounds = [os.path.abspath('.'), os.path.abspath(os.path.join(self.TMP_DIR, '..'))]
++        try:
++            while True:
++                tmp = os.path.dirname(tmp)
++                if os.path.abspath(tmp) in bounds:
++                    break
++                os.rmdir(tmp)
++        except OSError as e:
++            if e.errno != errno.ENOTEMPTY:
++                raise
+ 
+     def write_to_tmp_dir(self, new_contents):
+         """
+@@ -234,7 +252,7 @@
+         """
+         return self.engines[file_name].dump(contents[file_name])
+ 
+-    def get_modified_contents(self, patch):
++    def get_modified_contents(self, patch, minify=True):
+         target_files = self.contents.keys()
+         modification_points = copy.deepcopy(self.modification_points)
+         new_contents = copy.deepcopy(self.contents)
+@@ -242,6 +260,8 @@
+             edits = list(filter(lambda a: a.target[0] == target_file, patch.edit_list))
+             for edit in edits:
+                 edit.apply(self, new_contents, modification_points)
++            if minify and len(edits) == 0:
++                del new_contents[target_file]
+         return new_contents
+ 
+     def apply(self, patch):
+@@ -257,27 +277,49 @@
+             - key: The target file name(path) related to the program root path
+             - value: The contents of the file
+         """
++        self.reset_tmp_variant()
+         new_contents = self.get_modified_contents(patch)
+         self.write_to_tmp_dir(new_contents)
+         return new_contents
+ 
+-    def exec_cmd(self, cmd, timeout=15):
+-        cwd = os.getcwd()
+-        os.chdir(self.tmp_path)
+-        sprocess = subprocess.Popen(
+-            shlex.split(cmd),
+-            stdout=subprocess.PIPE,
+-            stderr=subprocess.PIPE)
++    def exec_cmd(self, cmd, timeout=15, env=None, shell=False, max_pipesize=1e4):
++        # 1e6 bytes is 1Mb
+         try:
++            stdout = b''
++            stderr = b''
++            stdout_size = 0
++            stderr_size = 0
+             start = time.time()
+-            stdout, stderr = sprocess.communicate(timeout=timeout)
++            sprocess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, shell=shell, preexec_fn=os.setsid)
++            while sprocess.poll() is None:
++                end = time.time()
++                if end-start > timeout:
++                    raise TimeoutError()
++                a = select.select([sprocess.stdout, sprocess.stderr], [], [], 1)[0]
++                if sprocess.stdout in a:
++                    for _ in range(1024):
++                        if not len(select.select([sprocess.stdout], [], [], 0)[0]):
++                            break
++                        stdout += sprocess.stdout.read(1)
++                        stdout_size += 1
++                if sprocess.stderr in a:
++                    for _ in range(1024):
++                        if not len(select.select([sprocess.stderr], [], [], 0)[0]):
++                            break
++                        stderr += sprocess.stderr.read(1)
++                        stderr_size += 1
++                if stdout_size+stderr_size >= max_pipesize:
++                    raise IOError()
+             end = time.time()
+-            return (sprocess.returncode, stdout.decode("ascii"), stderr.decode("ascii"), end-start)
+-        except subprocess.TimeoutExpired:
+-            sprocess.kill()
+-            return (None, None, None, None)
+-        finally:
+-            os.chdir(cwd)
++            stdout += sprocess.stdout.read()
++            stderr += sprocess.stderr.read()
++            return (sprocess.returncode, stdout, stderr, end-start)
++
++        except (TimeoutError, IOError):
++            end = time.time()
++            os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
++            _, _ = sprocess.communicate()
++            return (sprocess.returncode, stdout, stderr, end-start)
+ 
+     def compute_fitness(self, result, return_code, stdout, stderr, elapsed_time):
+         try:
+@@ -288,12 +330,17 @@
+     def evaluate_patch(self, patch, timeout=15):
+         # apply + run
+         self.apply(patch)
+-        return_code, stdout, stderr, elapsed_time = self.exec_cmd(self.test_command, timeout)
++        cwd = os.getcwd()
++        try:
++            os.chdir(self.tmp_path)
++            return_code, stdout, stderr, elapsed_time = self.exec_cmd(shlex.split(self.test_command), timeout)
++        finally:
++            os.chdir(cwd)
+         if return_code is None: # timeout
+             return RunResult('TIMEOUT')
+         else:
+             result = RunResult('SUCCESS', None)
+-            self.compute_fitness(result, return_code, stdout, stderr, elapsed_time)
++            self.compute_fitness(result, return_code, stdout.decode("ascii"), stderr.decode("ascii"), elapsed_time)
+             assert not (result.status == 'SUCCESS' and result.fitness is None)
+             return result
+ 
+@@ -306,7 +353,7 @@
+         :rtype: str
+         """
+         diffs = ''
+-        new_contents = self.get_modified_contents(patch)
++        new_contents = self.get_modified_contents(patch, minify=False)
+         for file_name in self.target_files:
+             orig = self.dump(self.contents, file_name)
+             modi = self.dump(new_contents, file_name)
+diff -ru a/pyggi/pyggi/tree/xml_engine.py b/pyggi/pyggi/tree/xml_engine.py
+--- a/pyggi/pyggi/tree/xml_engine.py	2020-05-09 19:42:37.960435610 +0100
++++ b/pyggi/pyggi/tree/xml_engine.py	2020-01-10 19:13:47.800449610 +0000
+@@ -40,8 +40,13 @@
+     def write_to_tmp_dir(cls, contents_of_file, tmp_path):
+         root, ext = os.path.splitext(tmp_path)
+         assert ext == '.xml'
+-        with open(root, 'w') as tmp_file:
+-            tmp_file.write(cls.dump(contents_of_file))
++        super().write_to_tmp_dir(contents_of_file, root)
++
++    @classmethod
++    def reset_in_tmp_dir(cls, target_file, ref_path, tmp_path):
++        root, ext = os.path.splitext(target_file)
++        assert ext == '.xml'
++        super().reset_in_tmp_dir(root, ref_path, tmp_path)
+ 
+     @classmethod
+     def dump(cls, contents_of_file):
+@@ -143,14 +148,19 @@
+             return False
+ 
+         # mutate
++        sp = cls.guess_spacing(parent.text)
+         for i, child in enumerate(parent):
+             if child == target:
+                 tmp = copy.deepcopy(ingredient)
+-                tmp.tail = None
+                 if op.direction == 'after':
++                    tmp.tail = child.tail
++                    child.tail = '\n' + sp
+                     i += 1
++                else:
++                    tmp.tail = '\n' + sp
+                 parent.insert(i, tmp)
+                 break
++            sp = cls.guess_spacing(child.tail)
+         else:
+             assert False
+ 
+@@ -240,3 +250,10 @@
+                     element.text += match.group(1)
+         for child in element:
+             cls.rotate_newlines(child)
++
++    @classmethod
++    def guess_spacing(cls, text):
++        if text is None:
++            return ''
++        m = [''] + re.findall(r"\n(\s*)", text, re.MULTILINE)
++        return m[-1]
+diff -ru a/pyggi/pyggi/utils/logger.py b/pyggi/pyggi/utils/logger.py
+--- a/pyggi/pyggi/utils/logger.py	2020-05-09 19:42:37.963768943 +0100
++++ b/pyggi/pyggi/utils/logger.py	2020-01-10 19:13:47.783782943 +0000
+@@ -30,7 +30,7 @@
+             pathlib.Path(Logger.LOG_DIR).mkdir(parents=True)
+         # file handler
+         self.log_file_path = os.path.join(Logger.LOG_DIR, "{}.log".format(name))
+-        file_handler = logging.FileHandler(self.log_file_path)
++        file_handler = logging.FileHandler(self.log_file_path, delay=True)
+         file_handler.setFormatter(formatter)
+         file_handler.setLevel(logging.DEBUG)
+         # stream handler
+@@ -40,47 +40,50 @@
+         self._logger.addHandler(file_handler)
+         self._logger.addHandler(stream_handler)
+ 
+-    def debug(self, msg):
++    def debug(self, msg, *args, **kwargs):
+         """
+         Logs a message with level DEBUG on this logger
+ 
+         :param msg: The message to record
+         :return: None
+         """
+-        self._logger.debug(msg)
++        self._logger.debug(msg, *args, **kwargs)
+ 
+-    def info(self, msg):
++    def info(self, msg, *args, **kwargs):
+         """
+         Logs a message with level INFO on this logger
+ 
+         :param msg: The message to record
+         :return: None
+         """
+-        self._logger.info(msg)
++        self._logger.info(msg, *args, **kwargs)
+ 
+-    def warning(self, msg):
++    def warning(self, msg, *args, **kwargs):
+         """
+         Logs a message with level WARNING on this logger
+ 
+         :param msg: The message to record
+         :return: None
+         """
+-        self._logger.warning(msg)
++        self._logger.warning(msg, *args, **kwargs)
+ 
+-    def error(self, msg):
++    def error(self, msg, *args, **kwargs):
+         """
+         Logs a message with level ERROR on this logger
+ 
+         :param msg: The message to record
+         :return: None
+         """
+-        self._logger.error(msg)
++        self._logger.error(msg, *args, **kwargs)
+ 
+-    def critical(self, msg):
++    def critical(self, msg, *args, **kwargs):
+         """
+         Logs a message with level CRITICAL on this logger
+ 
+         :param msg: The message to record
+         :return: None
+         """
+-        self._logger.critical(msg)
++        self._logger.critical(msg, *args, **kwargs)
++
++    def exception(self, msg, *args, **kwargs):
++        self._logger.critical(msg, *args, **kwargs)
+diff -ru a/pyggi/test/test_program.py b/pyggi/test/test_program.py
+--- a/pyggi/test/test_program.py	2020-05-09 19:42:37.967102276 +0100
++++ b/pyggi/test/test_program.py	2020-01-10 19:13:47.763782943 +0000
+@@ -135,8 +135,8 @@
+ 
+     def test_exec_cmd(self, setup_line):
+         program = setup_line
+-        _, stdout, _, _ = program.exec_cmd("echo hello")
+-        assert stdout.strip() == "hello"
++        _, stdout, _, _ = program.exec_cmd(['echo', 'hello'])
++        assert stdout.decode('ascii').strip() == "hello"
+ 
+     def test_evaluate_patch(self, setup_line):
+         program = setup_line
+@@ -222,8 +222,8 @@
+ 
+     def test_exec_cmd(self, setup_tree):
+         program = setup_tree
+-        _, stdout, _, _ = program.exec_cmd("echo hello")
+-        assert stdout.strip() == "hello"
++        _, stdout, _, _ = program.exec_cmd(['echo', 'hello'])
++        assert stdout.decode('ascii').strip() == "hello"
+ 
+     def test_evaluate_patch(self, setup_tree):
+         program = setup_tree

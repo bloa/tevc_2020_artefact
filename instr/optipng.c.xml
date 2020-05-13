@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<unit xmlns="http://www.srcML.org/srcML/src" xmlns:cpp="http://www.srcML.org/srcML/cpp" revision="0.9.5" language="C" filename="optipng.c"><comment type="block">/*
+ * OptiPNG: Advanced PNG optimization program.
+ * http://optipng.sourceforge.net/
+ *
+ * Copyright (C) 2001-2017 Cosmin Truta and the Contributing Authors.
+ *
+ * This software is distributed under the zlib license.
+ * Please see the accompanying LICENSE file.
+ *
+ * PNG optimization is described in detail in the PNG-Tech article
+ * "A guide to PNG optimization"
+ * http://optipng.sourceforge.net/pngtech/png_optimization.html
+ *
+ * The idea of running multiple compression trials with different
+ * PNG filters and zlib parameters is inspired from the pngcrush
+ * program by Glenn Randers-Pehrson.
+ * The idea of performing lossless image reductions is inspired
+ * from the pngrewrite program by Jason Summers.
+ */</comment>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;ctype.h&gt;</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;errno.h&gt;</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;stdarg.h&gt;</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;stdio.h&gt;</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;stdlib.h&gt;</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>&lt;string.h&gt;</cpp:file></cpp:include>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"optipng.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"proginfo.h"</cpp:file></cpp:include>
+
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"bitset.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"png.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"pngxutil.h"</cpp:file></cpp:include>
+<cpp:include>#<cpp:directive>include</cpp:directive> <cpp:file>"zlib.h"</cpp:file></cpp:include>
+
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_intro</name> <init>=
+    <expr><name>PROGRAM_NAME</name> <literal type="string">" version "</literal> <name>PROGRAM_VERSION</name> <literal type="string">"\n"</literal>
+    <name>PROGRAM_COPYRIGHT</name> <literal type="string">".\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_license</name> <init>=
+    <expr><literal type="string">"This program is open-source software. See LICENSE for more details.\n"</literal>
+    <literal type="string">"\n"</literal>
+    <literal type="string">"Portions of this software are based in part on the work of:\n"</literal>
+    <literal type="string">"  Jean-loup Gailly and Mark Adler (zlib)\n"</literal>
+    <literal type="string">"  Glenn Randers-Pehrson and the PNG Development Group (libpng)\n"</literal>
+    <literal type="string">"  Miyasaka Masaru (BMP support)\n"</literal>
+    <literal type="string">"  David Koblas (GIF support)\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_help_synopsis</name> <init>=
+    <expr><literal type="string">"Synopsis:\n"</literal>
+    <literal type="string">"    optipng [options] files ...\n"</literal>
+    <literal type="string">"Files:\n"</literal>
+    <literal type="string">"    Image files of type: PNG, BMP, GIF, PNM or TIFF\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_help_basic_options</name> <init>=
+    <expr><literal type="string">"Basic options:\n"</literal>
+    <literal type="string">"    -?, -h, -help\tshow the extended help\n"</literal>
+    <literal type="string">"    -o &lt;level&gt;\t\toptimization level (0-7)\t\t[default: 2]\n"</literal>
+    <literal type="string">"    -v\t\t\trun in verbose mode / show copyright and version info\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_help_options</name> <init>=
+    <expr><literal type="string">"Basic options:\n"</literal>
+    <literal type="string">"    -?, -h, -help\tshow this help\n"</literal>
+    <literal type="string">"    -o &lt;level&gt;\t\toptimization level (0-7)\t\t[default: 2]\n"</literal>
+    <literal type="string">"    -v\t\t\trun in verbose mode / show copyright and version info\n"</literal>
+    <literal type="string">"General options:\n"</literal>
+    <literal type="string">"    -backup, -keep\tkeep a backup of the modified files\n"</literal>
+    <literal type="string">"    -clobber\t\toverwrite existing files\n"</literal>
+<cpp:if>#<cpp:directive>if</cpp:directive> <expr><literal type="number">0</literal></expr></cpp:if>  <comment type="block">/* internal */</comment>
+    "    -debug\t\tenable debug features\n"
+<cpp:endif>#<cpp:directive>endif</cpp:directive></cpp:endif>
+    <literal type="string">"    -fix\t\tenable error recovery\n"</literal>
+    <literal type="string">"    -force\t\tenforce writing of a new output file\n"</literal>
+    <literal type="string">"    -preserve\t\tpreserve file attributes if possible\n"</literal>
+    <literal type="string">"    -quiet, -silent\trun in quiet mode\n"</literal>
+    <literal type="string">"    -simulate\t\trun in simulation mode\n"</literal>
+    <literal type="string">"    -out &lt;file&gt;\t\twrite output file to &lt;file&gt;\n"</literal>
+    <literal type="string">"    -dir &lt;directory&gt;\twrite output file(s) to &lt;directory&gt;\n"</literal>
+    <literal type="string">"    -log &lt;file&gt;\t\tlog messages to &lt;file&gt;\n"</literal>
+    <literal type="string">"    --\t\t\tstop option switch parsing\n"</literal>
+    <literal type="string">"Optimization options:\n"</literal>
+    <literal type="string">"    -f &lt;filters&gt;\tPNG delta filters (0-5)\t\t\t[default: 0,5]\n"</literal>
+    <literal type="string">"    -i &lt;type&gt;\t\tPNG interlace type (0-1)\n"</literal>
+    <literal type="string">"    -zc &lt;levels&gt;\tzlib compression levels (1-9)\t\t[default: 9]\n"</literal>
+    <literal type="string">"    -zm &lt;levels&gt;\tzlib memory levels (1-9)\t\t[default: 8]\n"</literal>
+    <literal type="string">"    -zs &lt;strategies&gt;\tzlib compression strategies (0-3)\t[default: 0-3]\n"</literal>
+    <literal type="string">"    -zw &lt;size&gt;\t\tzlib window size (256,512,1k,2k,4k,8k,16k,32k)\n"</literal>
+    <literal type="string">"    -full\t\tproduce a full report on IDAT (might reduce speed)\n"</literal>
+    <literal type="string">"    -nb\t\t\tno bit depth reduction\n"</literal>
+    <literal type="string">"    -nc\t\t\tno color type reduction\n"</literal>
+    <literal type="string">"    -np\t\t\tno palette reduction\n"</literal>
+    <literal type="string">"    -nx\t\t\tno reductions\n"</literal>
+    <literal type="string">"    -nz\t\t\tno IDAT recoding\n"</literal>
+    <literal type="string">"Editing options:\n"</literal>
+    <literal type="string">"    -snip\t\tcut one image out of multi-image or animation files\n"</literal>
+    <literal type="string">"    -strip &lt;objects&gt;\tstrip metadata objects (e.g. \"all\")\n"</literal>
+    <literal type="string">"Optimization levels:\n"</literal>
+    <literal type="string">"    -o0\t\t&lt;=&gt;\t-o1 -nx -nz\t\t\t\t(0 or 1 trials)\n"</literal>
+    <literal type="string">"    -o1\t\t&lt;=&gt;\t-zc9 -zm8 -zs0 -f0\t\t\t(1 trial)\n"</literal>
+    <literal type="string">"    \t\t(or...)\t-zc9 -zm8 -zs1 -f5\t\t\t(1 trial)\n"</literal>
+    <literal type="string">"    -o2\t\t&lt;=&gt;\t-zc9 -zm8 -zs0-3 -f0,5\t\t\t(8 trials)\n"</literal>
+    <literal type="string">"    -o3\t\t&lt;=&gt;\t-zc9 -zm8-9 -zs0-3 -f0,5\t\t(16 trials)\n"</literal>
+    <literal type="string">"    -o4\t\t&lt;=&gt;\t-zc9 -zm8 -zs0-3 -f0-5\t\t\t(24 trials)\n"</literal>
+    <literal type="string">"    -o5\t\t&lt;=&gt;\t-zc9 -zm8-9 -zs0-3 -f0-5\t\t(48 trials)\n"</literal>
+    <literal type="string">"    -o6\t\t&lt;=&gt;\t-zc1-9 -zm8 -zs0-3 -f0-5\t\t(120 trials)\n"</literal>
+    <literal type="string">"    -o7\t\t&lt;=&gt;\t-zc1-9 -zm8-9 -zs0-3 -f0-5\t\t(240 trials)\n"</literal>
+    <literal type="string">"    -o7 -zm1-9\t&lt;=&gt;\t-zc1-9 -zm1-9 -zs0-3 -f0-5\t\t(1080 trials)\n"</literal>
+    <literal type="string">"Notes:\n"</literal>
+    <literal type="string">"    The combination for -o1 is chosen heuristically.\n"</literal>
+    <literal type="string">"    Exhaustive combinations such as \"-o7 -zm1-9\" are not generally recommended.\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_help_examples</name> <init>=
+    <expr><literal type="string">"Examples:\n"</literal>
+    <literal type="string">"    optipng file.png\t\t\t\t\t\t(default speed)\n"</literal>
+    <literal type="string">"    optipng -o5 file.png\t\t\t\t\t(slow)\n"</literal>
+    <literal type="string">"    optipng -o7 file.png\t\t\t\t\t(very slow)\n"</literal></expr></init></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg_help_more</name> <init>=
+    <expr><literal type="string">"Type \"optipng -h\" for extended help.\n"</literal></expr></init></decl>;</decl_stmt>
+
+
+<enum><specifier>static</specifier> enum
+<block>{
+    <decl><name>OP_RUN</name></decl>,
+    <decl><name>OP_SHOW_HELP</name></decl>,
+    <decl><name>OP_SHOW_VERSION</name></decl>
+}</block> <decl><name>operation</name></decl>;</enum>
+
+<struct><specifier>static</specifier> struct
+<block>{
+    <decl_stmt><decl><type><name>int</name></type> <name>help</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>version</name></decl>;</decl_stmt>
+}</block> <decl><name>local_options</name></decl>;</struct>
+
+<decl_stmt><decl><specifier>static</specifier> <type><name><name>struct</name> <name>opng_options</name></name></type> <name>options</name></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><name>FILE</name> <modifier>*</modifier></type><name>con_file</name></decl>;</decl_stmt>
+<decl_stmt><decl><specifier>static</specifier> <type><name>FILE</name> <modifier>*</modifier></type><name>log_file</name></decl>;</decl_stmt>
+
+<decl_stmt><decl><specifier>static</specifier> <type><name>int</name></type> <name>start_of_line</name></decl>;</decl_stmt>
+
+
+<comment type="block">/*
+ * Error handling.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>error</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>fmt</name></decl></parameter>, <parameter><decl><type><modifier>...</modifier></type></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>va_list</name></type> <name>arg_ptr</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Print the error message to stderr and exit. */</comment>
+    <expr_stmt><expr><call><name>fprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>, <argument><expr><literal type="string">"** Error: "</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>va_start</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>vfprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>, <argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>va_end</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>fprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>, <argument><expr><literal type="string">"\n"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>exit</name><argument_list>(<argument><expr><name>EXIT_FAILURE</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+}</block></function>
+
+<comment type="block">/*
+ * Panic handling.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>panic</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>msg</name></decl></parameter>)</parameter_list>
+<block>{
+    <comment type="block">/* Print the panic message to stderr and terminate abnormally. */</comment>
+    <expr_stmt><expr><call><name>fprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>, <argument><expr><literal type="string">"\n** INTERNAL ERROR: %s\n"</literal></expr></argument>, <argument><expr><name>msg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>fprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>, <argument><expr><literal type="string">"Please submit a defect report.\n"</literal> <name>PROGRAM_URI</name> <literal type="string">"\n\n"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>fflush</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>debug</name></name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Terminate abnormally, possibly with a stack trace or a core dump. */</comment>
+        <expr_stmt><expr><call><name>abort</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    }</block></then>
+    <else>else
+    <block>{
+        <comment type="block">/* Terminate abnormally, cleanly. */</comment>
+        <expr_stmt><expr><call><name>fprintf</name><argument_list>(<argument><expr><name>stderr</name></expr></argument>,
+            <argument><expr><literal type="string">"The execution of this program has been terminated abnormally.\n"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>exit</name><argument_list>(<argument><expr><literal type="number">70</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>  <comment type="block">/* EX_SOFTWARE */</comment>
+    }</block></else></if>
+}</block></function>
+
+<comment type="block">/*
+ * String utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>opng_strcasecmp</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str1</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str2</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>int</name></type> <name>ch1</name></decl>, <decl><type ref="prev"/><name>ch2</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Perform a case-insensitive string comparison. */</comment>
+    <for>for <control>( <init>;</init> <condition>;</condition> <incr/>)</control>
+    <block>{
+        <expr_stmt><expr><name>ch1</name> <operator>=</operator> <call><name>tolower</name><argument_list>(<argument><expr><operator>*</operator><name>str1</name><operator>++</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><name>ch2</name> <operator>=</operator> <call><name>tolower</name><argument_list>(<argument><expr><operator>*</operator><name>str2</name><operator>++</operator></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <if>if <condition>(<expr><name>ch1</name> <operator>!=</operator> <name>ch2</name></expr>)</condition><then>
+            <block type="pseudo"><return>return <expr><name>ch1</name> <operator>-</operator> <name>ch2</name></expr>;</return></block></then></if>
+        <if>if <condition>(<expr><name>ch1</name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><return>return <expr><literal type="number">0</literal></expr>;</return></block></then></if>
+    }</block></for>
+    <comment type="block">/* FIXME: This function is not MBCS-aware. */</comment>
+}</block></function>
+
+<comment type="block">/*
+ * String utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>char</name> <modifier>*</modifier></type>
+<name>opng_strltrim</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str</name></decl></parameter>)</parameter_list>
+<block>{
+    <comment type="block">/* Skip the leading whitespace characters. */</comment>
+    <while>while <condition>(<expr><call><name>isspace</name><argument_list>(<argument><expr><operator>*</operator><name>str</name></expr></argument>)</argument_list></call></expr>)</condition>
+        <block type="pseudo"><expr_stmt><expr><operator>++</operator><name>str</name></expr>;</expr_stmt></block></while>
+    <return>return <expr><operator>(</operator><name>char</name> <operator>*</operator><operator>)</operator><name>str</name></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * String utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>char</name> <modifier>*</modifier></type>
+<name>opng_strtail</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str</name></decl></parameter>, <parameter><decl><type><name>size_t</name></type> <name>num</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>size_t</name></type> <name>len</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Return up to num rightmost characters. */</comment>
+    <expr_stmt><expr><name>len</name> <operator>=</operator> <call><name>strlen</name><argument_list>(<argument><expr><name>str</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <if>if <condition>(<expr><name>len</name> <operator>&lt;=</operator> <name>num</name></expr>)</condition><then>
+        <block type="pseudo"><return>return <expr><operator>(</operator><name>char</name> <operator>*</operator><operator>)</operator><name>str</name></expr>;</return></block></then></if>
+    <return>return <expr><operator>(</operator><name>char</name> <operator>*</operator><operator>)</operator><name>str</name> <operator>+</operator> <name>len</name> <operator>-</operator> <name>num</name></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * String utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>char</name> <modifier>*</modifier></type>
+<name>opng_strpbrk_digit</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str</name></decl></parameter>)</parameter_list>
+<block>{
+    <for>for <control>( <init>;</init> <condition>;</condition> <incr/>)</control>
+    <block>{
+        <if>if <condition>(<expr><operator>*</operator><name>str</name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><return>return <expr><name>NULL</name></expr>;</return></block></then></if>
+        <if>if <condition>(<expr><call><name>isdigit</name><argument_list>(<argument><expr><operator>*</operator><name>str</name></expr></argument>)</argument_list></call></expr>)</condition><then>
+            <block type="pseudo"><return>return <expr><operator>(</operator><name>char</name> <operator>*</operator><operator>)</operator><name>str</name></expr>;</return></block></then></if>
+        <expr_stmt><expr><operator>++</operator><name>str</name></expr>;</expr_stmt>
+    }</block></for>
+}</block></function>
+
+<comment type="block">/*
+ * String conversion utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>opng_str2ulong</name><parameter_list>(<parameter><decl><type><name>unsigned</name> <name>long</name> <modifier>*</modifier></type><name>out_val</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>in_str</name></decl></parameter>,
+               <parameter><decl><type><name>int</name></type> <name>allow_multiplier</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>begin_ptr</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>char</name> <modifier>*</modifier></type><name>end_ptr</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>unsigned</name> <name>long</name></type> <name>multiplier</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Extract the value from the string. */</comment>
+    <comment type="block">/* Do not allow the minus sign, not even for -0. */</comment>
+    <expr_stmt><expr><name>begin_ptr</name> <operator>=</operator> <name>end_ptr</name> <operator>=</operator> <call><name>opng_strltrim</name><argument_list>(<argument><expr><name>in_str</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <if>if <condition>(<expr><operator>*</operator><name>begin_ptr</name> <operator>&gt;=</operator> <literal type="char">'0'</literal> <operator>&amp;&amp;</operator> <operator>*</operator><name>begin_ptr</name> <operator>&lt;=</operator> <literal type="char">'9'</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><operator>*</operator><name>out_val</name> <operator>=</operator> <call><name>strtoul</name><argument_list>(<argument><expr><name>begin_ptr</name></expr></argument>, <argument><expr><operator>&amp;</operator><name>end_ptr</name></expr></argument>, <argument><expr><literal type="number">10</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    <if>if <condition>(<expr><name>begin_ptr</name> <operator>==</operator> <name>end_ptr</name></expr>)</condition><then>
+    <block>{
+        <expr_stmt><expr><name>errno</name> <operator>=</operator> <name>EINVAL</name></expr>;</expr_stmt>  <comment type="block">/* matching failure */</comment>
+        <expr_stmt><expr><operator>*</operator><name>out_val</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+        <return>return <expr><operator>-</operator><literal type="number">1</literal></expr>;</return>
+    }</block></then></if>
+
+    <if>if <condition>(<expr><name>allow_multiplier</name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Check for the following SI suffixes:
+         *   'K' or 'k': kibi (1024)
+         *   'M':        mebi (1024 * 1024)
+         *   'G':        gibi (1024 * 1024 * 1024)
+         */</comment>
+        <if>if <condition>(<expr><operator>*</operator><name>end_ptr</name> <operator>==</operator> <literal type="char">'k'</literal> <operator>||</operator> <operator>*</operator><name>end_ptr</name> <operator>==</operator> <literal type="char">'K'</literal></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><operator>++</operator><name>end_ptr</name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>multiplier</name> <operator>=</operator> <literal type="number">1024UL</literal></expr>;</expr_stmt>
+        }</block></then>
+        <elseif>else <if>if <condition>(<expr><operator>*</operator><name>end_ptr</name> <operator>==</operator> <literal type="char">'M'</literal></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><operator>++</operator><name>end_ptr</name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>multiplier</name> <operator>=</operator> <literal type="number">1024UL</literal> <operator>*</operator> <literal type="number">1024UL</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><operator>*</operator><name>end_ptr</name> <operator>==</operator> <literal type="char">'G'</literal></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><operator>++</operator><name>end_ptr</name></expr>;</expr_stmt>
+            <expr_stmt><expr><name>multiplier</name> <operator>=</operator> <literal type="number">1024UL</literal> <operator>*</operator> <literal type="number">1024UL</literal> <operator>*</operator> <literal type="number">1024UL</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <else>else
+            <block type="pseudo"><expr_stmt><expr><name>multiplier</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt></block></else></if>
+        <if>if <condition>(<expr><name>multiplier</name> <operator>&gt;</operator> <literal type="number">1</literal></expr>)</condition><then>
+        <block>{
+            <if>if <condition>(<expr><operator>*</operator><name>out_val</name> <operator>&gt;</operator> <name>ULONG_MAX</name> <operator>/</operator> <name>multiplier</name></expr>)</condition><then>
+            <block>{
+                <expr_stmt><expr><name>errno</name> <operator>=</operator> <name>ERANGE</name></expr>;</expr_stmt>  <comment type="block">/* overflow */</comment>
+                <expr_stmt><expr><operator>*</operator><name>out_val</name> <operator>=</operator> <name>ULONG_MAX</name></expr>;</expr_stmt>
+            }</block></then>
+            <else>else
+                <block type="pseudo"><expr_stmt><expr><operator>*</operator><name>out_val</name> <operator>*=</operator> <name>multiplier</name></expr>;</expr_stmt></block></else></if>
+        }</block></then></if>
+    }</block></then></if>
+
+    <comment type="block">/* Check for trailing garbage. */</comment>
+    <if>if <condition>(<expr><operator>*</operator><call><name>opng_strltrim</name><argument_list>(<argument><expr><name>end_ptr</name></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+    <block>{
+        <expr_stmt><expr><name>errno</name> <operator>=</operator> <name>EINVAL</name></expr>;</expr_stmt>  <comment type="block">/* garbage in input */</comment>
+        <return>return <expr><operator>-</operator><literal type="number">1</literal></expr>;</return>
+    }</block></then></if>
+    <return>return <expr><literal type="number">0</literal></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * Command line utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>err_option_arg</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt_arg</name></decl></parameter>)</parameter_list>
+<block>{
+    <comment type="block">/* Issue an error regarding the incorrect value of the option argument. */</comment>
+    <if>if <condition>(<expr><name>opt_arg</name> <operator>==</operator> <name>NULL</name> <operator>||</operator> <operator>*</operator><call><name>opng_strltrim</name><argument_list>(<argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Missing argument for option %s"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then>
+    <else>else
+        <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Invalid argument for option %s: %s"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></else></if>
+}</block></function>
+
+<comment type="block">/*
+ * Command line utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>check_num_option</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt_arg</name></decl></parameter>,
+                 <parameter><decl><type><name>int</name></type> <name>lowest</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>highest</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>unsigned</name> <name>long</name></type> <name>value</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Extract the numeric value from the option argument. */</comment>
+    <if>if <condition>(<expr><call><name>opng_str2ulong</name><argument_list>(<argument><expr><operator>&amp;</operator><name>value</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>, <argument><expr><literal type="number">0</literal></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal> <operator>||</operator>
+        <name>value</name> <operator>&gt;</operator> <name>INT_MAX</name> <operator>||</operator> <operator>(</operator><name>int</name><operator>)</operator><name>value</name> <operator>&lt;</operator> <name>lowest</name> <operator>||</operator> <operator>(</operator><name>int</name><operator>)</operator><name>value</name> <operator>&gt;</operator> <name>highest</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    <return>return <expr><operator>(</operator><name>int</name><operator>)</operator><name>value</name></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * Command line utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>check_power2_option</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt_arg</name></decl></parameter>,
+                    <parameter><decl><type><name>int</name></type> <name>lowest</name></decl></parameter>, <parameter><decl><type><name>int</name></type> <name>highest</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>unsigned</name> <name>long</name></type> <name>value</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>result</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Extract the exact log2 of the numeric value from the option argument. */</comment>
+    <comment type="block">/* Allow the 'k', 'M', 'G' suffixes. */</comment>
+    <if>if <condition>(<expr><call><name>opng_str2ulong</name><argument_list>(<argument><expr><operator>&amp;</operator><name>value</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>, <argument><expr><literal type="number">1</literal></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+    <block>{
+        <if>if <condition>(<expr><name>lowest</name> <operator>&lt;</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><name>lowest</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt></block></then></if>
+        <if>if <condition>(<expr><name>highest</name> <operator>&gt;</operator> <call>(<name>int</name>)<argument_list>(<argument><expr><name>CHAR_BIT</name> <operator>*</operator> <sizeof>sizeof<argument_list>(<argument><expr><name>long</name></expr></argument>)</argument_list></sizeof> <operator>-</operator> <literal type="number">2</literal></expr></argument>)</argument_list></call></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><name>highest</name> <operator>=</operator> <call>(<name>int</name>)<argument_list>(<argument><expr><name>CHAR_BIT</name> <operator>*</operator> <sizeof>sizeof<argument_list>(<argument><expr><name>long</name></expr></argument>)</argument_list></sizeof> <operator>-</operator> <literal type="number">2</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+        <for>for <control>(<init><expr><name>result</name> <operator>=</operator> <name>lowest</name></expr>;</init> <condition><expr><name>result</name> <operator>&lt;=</operator> <name>highest</name></expr>;</condition> <incr><expr><operator>++</operator><name>result</name></expr></incr>)</control>
+        <block>{
+            <if>if <condition>(<expr><operator>(</operator><literal type="number">1UL</literal> <operator>&lt;&lt;</operator> <name>result</name><operator>)</operator> <operator>==</operator> <name>value</name></expr>)</condition><then>
+                <block type="pseudo"><return>return <expr><name>result</name></expr>;</return></block></then></if>
+        }</block></for>
+    }</block></then></if>
+    <expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <return>return <expr><operator>-</operator><literal type="number">1</literal></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * Command line utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>opng_bitset_t</name></type>
+<name>check_rangeset_option</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt_arg</name></decl></parameter>,
+                      <parameter><decl><type><name>opng_bitset_t</name></type> <name>result_mask</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>opng_bitset_t</name></type> <name>result</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Extract the rangeset from the option argument.
+     * Accept only non-empty rangesets that fit in the given range.
+     */</comment>
+    <if>if <condition>(<expr><call><name>opng_strparse_rangeset_to_bitset</name><argument_list>(<argument><expr><operator>&amp;</operator><name>result</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>, <argument><expr><name>result_mask</name></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>result</name> <operator>=</operator> <name>OPNG_BITSET_EMPTY</name></expr>;</expr_stmt></block></then></if>
+    <if>if <condition>(<expr><operator>(</operator><name>result</name> <operator>&amp;</operator> <name>result_mask</name><operator>)</operator> <operator>!=</operator> <name>result</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>result</name> <operator>=</operator> <name>OPNG_BITSET_EMPTY</name></expr>;</expr_stmt></block></then></if>
+    <if>if <condition>(<expr><name>result</name> <operator>==</operator> <name>OPNG_BITSET_EMPTY</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    <return>return <expr><name>result</name></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * Command line utility.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>check_obj_option</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>opt_arg</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>unsigned</name> <name>int</name></type> <name>i</name></decl>;</decl_stmt>
+
+    <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"all"</literal></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><return>return;</return></block></then></if>
+
+    <comment type="block">/* Issue an error about the unrecognized option argument. */</comment>
+    <comment type="block">/* Make it specific on whether this argument is a chunk name. */</comment>
+    <for>for <control>(<init><expr><name>i</name> <operator>=</operator> <literal type="number">0</literal></expr>;</init> <condition><expr><name>i</name> <operator>&lt;</operator> <literal type="number">4</literal></expr>;</condition> <incr><expr><operator>++</operator><name>i</name></expr></incr>)</control>
+    <block>{
+        <comment type="block">/* Do not use isalpha(), because it is locale-dependent. */</comment>
+        <if>if <condition>(<expr><operator>!</operator><operator>(</operator><operator>(</operator><name><name>opt_arg</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&gt;=</operator> <literal type="char">'A'</literal> <operator>&amp;&amp;</operator> <name><name>opt_arg</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&lt;=</operator> <literal type="char">'Z'</literal><operator>)</operator> <operator>||</operator>
+              <operator>(</operator><name><name>opt_arg</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&gt;=</operator> <literal type="char">'a'</literal> <operator>&amp;&amp;</operator> <name><name>opt_arg</name><index>[<expr><name>i</name></expr>]</index></name> <operator>&lt;=</operator> <literal type="char">'z'</literal><operator>)</operator><operator>)</operator></expr>)</condition><then>
+            <block type="pseudo"><break>break;</break></block></then></if>
+    }</block></for>
+    <if>if <condition>(<expr><name>i</name> <operator>==</operator> <literal type="number">4</literal> <operator>&amp;&amp;</operator> <name><name>opt_arg</name><index>[<expr><name>i</name></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Manipulation of individual chunks is not implemented"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then>
+    <else>else
+        <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></else></if>
+}</block></function>
+
+<comment type="block">/*
+ * Command line parsing.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>scan_option</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>str</name></decl></parameter>,
+            <parameter><decl><type><name>char</name></type> <name><name>opt_buf</name><index>[]</index></name></decl></parameter>, <parameter><decl><type><name>size_t</name></type> <name>opt_buf_size</name></decl></parameter>, <parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier><modifier>*</modifier></type><name>opt_arg_ptr</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>ptr</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>unsigned</name> <name>int</name></type> <name>opt_len</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Check if arg is an "-option". */</comment>
+    <if>if <condition>(<expr><name><name>str</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>!=</operator> <literal type="char">'-'</literal> <operator>||</operator> <name><name>str</name><index>[<expr><literal type="number">1</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>  <comment type="block">/* no "-option", or just "-" */</comment>
+        <block type="pseudo"><return>return <expr><literal type="number">0</literal></expr>;</return></block></then></if>
+
+    <comment type="block">/* Extract the normalized option, and possibly the option argument. */</comment>
+    <expr_stmt><expr><name>opt_len</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+    <expr_stmt><expr><name>ptr</name> <operator>=</operator> <name>str</name> <operator>+</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+    <while>while <condition>(<expr><operator>*</operator><name>ptr</name> <operator>==</operator> <literal type="char">'-'</literal></expr>)</condition>  <comment type="block">/* "--option", "---option", etc. */</comment>
+        <block type="pseudo"><expr_stmt><expr><operator>++</operator><name>ptr</name></expr>;</expr_stmt></block></while>
+    <if>if <condition>(<expr><operator>*</operator><name>ptr</name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>  <comment type="block">/* "--" */</comment>
+        <block type="pseudo"><expr_stmt><expr><operator>--</operator><name>ptr</name></expr>;</expr_stmt></block></then></if>
+    <for>for <control>( <init>;</init> <condition>;</condition> <incr/>)</control>
+    <block>{
+        <if>if <condition>(<expr><name>opt_len</name> <operator>&lt;</operator> <name>opt_buf_size</name></expr>)</condition><then>  <comment type="block">/* truncate "-verylongoption" */</comment>
+            <block type="pseudo"><expr_stmt><expr><name><name>opt_buf</name><index>[<expr><name>opt_len</name></expr>]</index></name> <operator>=</operator> <operator>(</operator><name>char</name><operator>)</operator><call><name>tolower</name><argument_list>(<argument><expr><operator>*</operator><name>ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+        <expr_stmt><expr><operator>++</operator><name>opt_len</name></expr>;</expr_stmt>
+        <expr_stmt><expr><operator>++</operator><name>ptr</name></expr>;</expr_stmt>
+        <if>if <condition>(<expr><operator>*</operator><name>ptr</name> <operator>==</operator> <literal type="number">0</literal> <operator>||</operator> <call><name>isspace</name><argument_list>(<argument><expr><operator>*</operator><name>ptr</name></expr></argument>)</argument_list></call></expr>)</condition><then>  <comment type="block">/* "-option" or "-option arg" */</comment>
+        <block>{
+            <while>while <condition>(<expr><call><name>isspace</name><argument_list>(<argument><expr><operator>*</operator><name>ptr</name></expr></argument>)</argument_list></call></expr>)</condition>
+                <block type="pseudo"><expr_stmt><expr><operator>++</operator><name>ptr</name></expr>;</expr_stmt></block></while>
+            <expr_stmt><expr><operator>*</operator><name>opt_arg_ptr</name> <operator>=</operator> <ternary><condition><expr><operator>(</operator><operator>*</operator><name>ptr</name> <operator>!=</operator> <literal type="number">0</literal><operator>)</operator></expr> ?</condition><then> <expr><name>ptr</name></expr> </then><else>: <expr><name>NULL</name></expr></else></ternary></expr>;</expr_stmt>
+            <break>break;</break>
+        }</block></then></if>
+        <if>if <condition>(<expr><operator>*</operator><name>ptr</name> <operator>==</operator> <literal type="char">'='</literal></expr>)</condition><then>  <comment type="block">/* "-option=arg" */</comment>
+        <block>{
+            <expr_stmt><expr><operator>++</operator><name>ptr</name></expr>;</expr_stmt>
+            <expr_stmt><expr><operator>*</operator><name>opt_arg_ptr</name> <operator>=</operator> <name>ptr</name></expr>;</expr_stmt>
+            <break>break;</break>
+        }</block></then></if>
+    }</block></for>
+
+    <comment type="block">/* Finalize the normalized option. */</comment>
+    <if>if <condition>(<expr><name>opt_buf_size</name> <operator>&gt;</operator> <literal type="number">0</literal></expr>)</condition><then>
+    <block>{
+        <if>if <condition>(<expr><name>opt_len</name> <operator>&lt;</operator> <name>opt_buf_size</name></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><name><name>opt_buf</name><index>[<expr><name>opt_len</name></expr>]</index></name> <operator>=</operator> <literal type="char">'\0'</literal></expr>;</expr_stmt></block></then>
+        <else>else
+            <block type="pseudo"><expr_stmt><expr><name><name>opt_buf</name><index>[<expr><name>opt_buf_size</name> <operator>-</operator> <literal type="number">1</literal></expr>]</index></name> <operator>=</operator> <literal type="char">'\0'</literal></expr>;</expr_stmt></block></else></if>
+    }</block></then></if>
+    <return>return <expr><literal type="number">1</literal></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * Command line parsing.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>parse_args</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>argc</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name><name>argv</name><index>[]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>char</name> <modifier>*</modifier></type><name>arg</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>char</name></type> <name><name>opt</name><index>[<expr><literal type="number">16</literal></expr>]</index></name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>size_t</name></type> <name>opt_len</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>xopt</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>simple_opt</name></decl>, <decl><type ref="prev"/><name>stop_switch</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>opng_bitset_t</name></type> <name>set</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>val</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>unsigned</name> <name>int</name></type> <name>file_count</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>i</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Initialize. */</comment>
+    <expr_stmt><expr><call><name>memset</name><argument_list>(<argument><expr><operator>&amp;</operator><name>options</name></expr></argument>, <argument><expr><literal type="number">0</literal></expr></argument>, <argument><expr><sizeof>sizeof<argument_list>(<argument><expr><name>options</name></expr></argument>)</argument_list></sizeof></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><name><name>options</name><operator>.</operator><name>optim_level</name></name> <operator>=</operator> <operator>-</operator><literal type="number">1</literal></expr>;</expr_stmt>
+    <expr_stmt><expr><name><name>options</name><operator>.</operator><name>interlace</name></name> <operator>=</operator> <operator>-</operator><literal type="number">1</literal></expr>;</expr_stmt>
+    <expr_stmt><expr><name>file_count</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+
+    <comment type="block">/* Iterate over args. */</comment>
+    <expr_stmt><expr><name>stop_switch</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+    <for>for <control>(<init><expr><name>i</name> <operator>=</operator> <literal type="number">1</literal></expr>;</init> <condition><expr><name>i</name> <operator>&lt;</operator> <name>argc</name></expr>;</condition> <incr><expr><operator>++</operator><name>i</name></expr></incr>)</control>
+    <block>{
+        <expr_stmt><expr><name>arg</name> <operator>=</operator> <name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+        <if>if <condition>(<expr><name>stop_switch</name> <operator>||</operator> <call><name>scan_option</name><argument_list>(<argument><expr><name>arg</name></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><sizeof>sizeof<argument_list>(<argument><expr><name>opt</name></expr></argument>)</argument_list></sizeof></expr></argument>, <argument><expr><operator>&amp;</operator><name>xopt</name></expr></argument>)</argument_list></call> <operator>&lt;</operator> <literal type="number">1</literal></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><operator>++</operator><name>file_count</name></expr>;</expr_stmt>
+            <continue>continue;</continue>  <comment type="block">/* leave file names for process_files() */</comment>
+        }</block></then></if>
+        <expr_stmt><expr><name>opt_len</name> <operator>=</operator> <call><name>strlen</name><argument_list>(<argument><expr><name>opt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+
+        <comment type="block">/* Prevent process_files() from seeing this arg. */</comment>
+        <expr_stmt><expr><name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>NULL</name></expr>;</expr_stmt>
+
+        <comment type="block">/* Normalize the options that allow juxtaposed arguments. */</comment>
+        <if>if <condition>(<expr><operator>(</operator><call><name>strchr</name><argument_list>(<argument><expr><literal type="string">"fio"</literal></expr></argument>, <argument><expr><name><name>opt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name></expr></argument>)</argument_list></call> <operator>!=</operator> <name>NULL</name> <operator>&amp;&amp;</operator> <call><name>isdigit</name><argument_list>(<argument><expr><name><name>opt</name><index>[<expr><literal type="number">1</literal></expr>]</index></name></expr></argument>)</argument_list></call><operator>)</operator> <operator>||</operator>
+            <operator>(</operator><name><name>opt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="char">'z'</literal> <operator>&amp;&amp;</operator> <call><name>isalpha</name><argument_list>(<argument><expr><name><name>opt</name><index>[<expr><literal type="number">1</literal></expr>]</index></name></expr></argument>)</argument_list></call> <operator>&amp;&amp;</operator> <call><name>isdigit</name><argument_list>(<argument><expr><name><name>opt</name><index>[<expr><literal type="number">2</literal></expr>]</index></name></expr></argument>)</argument_list></call><operator>)</operator></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -f0-5 &lt;=&gt; -f=0-5; -i1 &lt;=&gt; -i=1; -o3 &lt;=&gt; -o=3;
+             * -zc3-9 &lt;=&gt; -zc=3-9; etc.
+             */</comment>
+            <expr_stmt><expr><name>opt_len</name> <operator>=</operator> <call>(<name>size_t</name>)<argument_list>(<argument><expr><call><name>opng_strpbrk_digit</name><argument_list>(<argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>-</operator> <name>opt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>opt</name><index>[<expr><name>opt_len</name></expr>]</index></name> <operator>=</operator> <literal type="char">'\0'</literal></expr>;</expr_stmt>
+            <expr_stmt><expr><name>xopt</name> <operator>=</operator> <call><name>opng_strpbrk_digit</name><argument_list>(<argument><expr><name>arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        }</block></then></if>
+
+        <comment type="block">/* Check the simple options (without option arguments). */</comment>
+        <expr_stmt><expr><name>simple_opt</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"-"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -- */</comment>
+            <expr_stmt><expr><name>stop_switch</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"?"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>||</operator>
+                 <call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"help"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -? | -h | ... | -help */</comment>
+            <expr_stmt><expr><name><name>local_options</name><operator>.</operator><name>help</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><operator>(</operator><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"backup"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal><operator>)</operator> <operator>||</operator>
+                 <operator>(</operator><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"keep"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal><operator>)</operator></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -b | ... | -backup | -k | ... | -keep */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>backup</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"clobber"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -c | ... | -clobber */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>clobber</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"debug"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -debug */</comment>
+            <comment type="block">/* Do not abbreviate this internal option. */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>debug</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"fix"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -fi | -fix */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>fix</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"force"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -fo | ... | -force */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>force</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"full"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -fu | ... | -full */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>full</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"nb"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -nb */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>nb</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"nc"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -nc */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>nc</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"np"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -np */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>np</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"nx"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -nx */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>nb</name></name> <operator>=</operator> <name><name>options</name><operator>.</operator><name>nc</name></name> <operator>=</operator> <name><name>options</name><operator>.</operator><name>np</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+            <comment type="block">/* options.nm = 1; */</comment>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"nz"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -nz */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>nz</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"preserve"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -p | ... | -preserve */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>preserve</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><operator>(</operator><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"quiet"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal><operator>)</operator> <operator>||</operator>
+                 <operator>(</operator><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"silent"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">3</literal><operator>)</operator></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -q | ... | -quiet | -sil | ... | -silent */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>quiet</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"simulate"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">3</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -sim | ... | -simulate */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>simulate</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"snip"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -sn | ... | -snip */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>snip</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"v"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -v */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>verbose</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>local_options</name><operator>.</operator><name>version</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"verbose"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">4</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -verb | ... | -verbose */</comment>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>verbose</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"version"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">4</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -vers | ... | -version */</comment>
+            <expr_stmt><expr><name><name>local_options</name><operator>.</operator><name>version</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <else>else  <comment type="block">/* possibly an option with an argument */</comment>
+        <block>{
+            <expr_stmt><expr><name>simple_opt</name> <operator>=</operator> <literal type="number">0</literal></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name>xopt</name> <operator>==</operator> <name>NULL</name></expr>)</condition><then>
+            <block>{
+                <if>if <condition>(<expr><operator>++</operator><name>i</name> <operator>&lt;</operator> <name>argc</name></expr>)</condition><then>
+                <block>{
+                    <expr_stmt><expr><name>xopt</name> <operator>=</operator> <name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name></expr>;</expr_stmt>
+                    <comment type="block">/* Prevent process_files() from seeing this xopt. */</comment>
+                    <expr_stmt><expr><name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name> <operator>=</operator> <name>NULL</name></expr>;</expr_stmt>
+                }</block></then>
+                <else>else
+                <block>{
+                    <comment type="block">/* Last option in command line; assume an empty xopt. */</comment>
+                    <expr_stmt><expr><name>xopt</name> <operator>=</operator> <literal type="string">""</literal></expr>;</expr_stmt>
+                }</block></else></if>
+            }</block></then></if>
+        }</block></else></if>
+
+        <comment type="block">/* Check the options that have option arguments. */</comment>
+        <if>if <condition>(<expr><name>simple_opt</name></expr>)</condition><then>
+        <block>{
+            <if>if <condition>(<expr><name>xopt</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"No argument allowed for option: %s"</literal></expr></argument>, <argument><expr><name>arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+        }</block></then>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"o"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -o NUM */</comment>
+            <expr_stmt><expr><name>val</name> <operator>=</operator> <call><name>check_num_option</name><argument_list>(<argument><expr><literal type="string">"-o"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><literal type="number">0</literal></expr></argument>, <argument><expr><name>INT_MAX</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>optim_level</name></name> <operator>&lt;</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><name><name>options</name><operator>.</operator><name>optim_level</name></name> <operator>=</operator> <name>val</name></expr>;</expr_stmt></block></then>
+            <elseif>else <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>optim_level</name></name> <operator>!=</operator> <name>val</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple optimization levels are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if></elseif></if>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"i"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -i NUM */</comment>
+            <expr_stmt><expr><name>val</name> <operator>=</operator> <call><name>check_num_option</name><argument_list>(<argument><expr><literal type="string">"-i"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><literal type="number">0</literal></expr></argument>, <argument><expr><literal type="number">1</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>interlace</name></name> <operator>&lt;</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><name><name>options</name><operator>.</operator><name>interlace</name></name> <operator>=</operator> <name>val</name></expr>;</expr_stmt></block></then>
+            <elseif>else <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>interlace</name></name> <operator>!=</operator> <name>val</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple interlace types are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if></elseif></if>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"f"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -f SET */</comment>
+            <expr_stmt><expr><name>set</name> <operator>=</operator> <call><name>check_rangeset_option</name><argument_list>(<argument><expr><literal type="string">"-f"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><name>OPNG_FILTER_SET_MASK</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>filter_set</name></name> <operator>|=</operator> <name>set</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"zc"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -zc SET */</comment>
+            <expr_stmt><expr><name>set</name> <operator>=</operator> <call><name>check_rangeset_option</name><argument_list>(<argument><expr><literal type="string">"-zc"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><name>OPNG_COMPR_LEVEL_SET_MASK</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>compr_level_set</name></name> <operator>|=</operator> <name>set</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"zm"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -zm SET */</comment>
+            <expr_stmt><expr><name>set</name> <operator>=</operator> <call><name>check_rangeset_option</name><argument_list>(<argument><expr><literal type="string">"-zm"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><name>OPNG_MEM_LEVEL_SET_MASK</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>mem_level_set</name></name> <operator>|=</operator> <name>set</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"zs"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -zs SET */</comment>
+            <expr_stmt><expr><name>set</name> <operator>=</operator> <call><name>check_rangeset_option</name><argument_list>(<argument><expr><literal type="string">"-zs"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><name>OPNG_STRATEGY_SET_MASK</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>strategy_set</name></name> <operator>|=</operator> <name>set</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strcmp</name><argument_list>(<argument><expr><literal type="string">"zw"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -zw NUM */</comment>
+            <expr_stmt><expr><name>val</name> <operator>=</operator> <call><name>check_power2_option</name><argument_list>(<argument><expr><literal type="string">"-zw"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>, <argument><expr><literal type="number">8</literal></expr></argument>, <argument><expr><literal type="number">15</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>window_bits</name></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><name><name>options</name><operator>.</operator><name>window_bits</name></name> <operator>=</operator> <name>val</name></expr>;</expr_stmt></block></then>
+            <elseif>else <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>window_bits</name></name> <operator>!=</operator> <name>val</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple window sizes are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if></elseif></if>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"strip"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -st OBJ | ... | -strip OBJ */</comment>
+            <expr_stmt><expr><call><name>check_obj_option</name><argument_list>(<argument><expr><literal type="string">"-strip"</literal></expr></argument>, <argument><expr><name>xopt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>strip_all</name></name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"out"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>opt_len</name> <operator>&gt;=</operator> <literal type="number">2</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -ou PATH | -out PATH */</comment>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>out_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple output file names are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <if>if <condition>(<expr><name><name>xopt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><literal type="string">"-out"</literal></expr></argument>, <argument><expr><name>NULL</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>out_name</name></name> <operator>=</operator> <name>xopt</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"dir"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -d PATH | ... | -dir PATH */</comment>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>dir_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple output dir names are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <if>if <condition>(<expr><name><name>xopt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><literal type="string">"-dir"</literal></expr></argument>, <argument><expr><name>NULL</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>dir_name</name></name> <operator>=</operator> <name>xopt</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <elseif>else <if>if <condition>(<expr><call><name>strncmp</name><argument_list>(<argument><expr><literal type="string">"log"</literal></expr></argument>, <argument><expr><name>opt</name></expr></argument>, <argument><expr><name>opt_len</name></expr></argument>)</argument_list></call> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* -l PATH | ... | -log PATH */</comment>
+            <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>log_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Multiple log file names are not permitted"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <if>if <condition>(<expr><name><name>xopt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+                <block type="pseudo"><expr_stmt><expr><call><name>err_option_arg</name><argument_list>(<argument><expr><literal type="string">"-log"</literal></expr></argument>, <argument><expr><name>NULL</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+            <expr_stmt><expr><name><name>options</name><operator>.</operator><name>log_name</name></name> <operator>=</operator> <name>xopt</name></expr>;</expr_stmt>
+        }</block></then></if></elseif>
+        <else>else
+        <block>{
+            <expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Unrecognized option: %s"</literal></expr></argument>, <argument><expr><name>arg</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        }</block></else></if>
+    }</block></for>
+
+    <comment type="block">/* Finalize. */</comment>
+    <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>out_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <if>if <condition>(<expr><name>file_count</name> <operator>&gt;</operator> <literal type="number">1</literal></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"The option -out requires one input file"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+        <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>dir_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"The options -out and -dir are mutually exclusive"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    }</block></then></if>
+    <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>log_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <if>if <condition>(<expr><call><name>opng_strcasecmp</name><argument_list>(<argument><expr><literal type="string">".log"</literal></expr></argument>, <argument><expr><call><name>opng_strtail</name><argument_list>(<argument><expr><name><name>options</name><operator>.</operator><name>log_name</name></name></expr></argument>, <argument><expr><literal type="number">4</literal></expr></argument>)</argument_list></call></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"To prevent accidental data corruption, "</literal>
+                  <literal type="string">"the log file name must end with \".log\""</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    }</block></then></if>
+    <if>if <condition>(<expr><name><name>local_options</name><operator>.</operator><name>help</name></name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>operation</name> <operator>=</operator> <name>OP_SHOW_HELP</name></expr>;</expr_stmt></block></then>
+    <elseif>else <if>if <condition>(<expr><name>file_count</name> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>operation</name> <operator>=</operator> <name>OP_RUN</name></expr>;</expr_stmt></block></then></if></elseif>
+    <elseif>else <if>if <condition>(<expr><name><name>local_options</name><operator>.</operator><name>version</name></name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>operation</name> <operator>=</operator> <name>OP_SHOW_VERSION</name></expr>;</expr_stmt></block></then></if></elseif>
+    <else>else
+        <block type="pseudo"><expr_stmt><expr><name>operation</name> <operator>=</operator> <name>OP_SHOW_HELP</name></expr>;</expr_stmt></block></else></if>
+}</block></function>
+
+<comment type="block">/*
+ * Application-defined printf callback.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>app_printf</name><parameter_list>(<parameter><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>fmt</name></decl></parameter>, <parameter><decl><type><modifier>...</modifier></type></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>va_list</name></type> <name>arg_ptr</name></decl>;</decl_stmt>
+
+    <if>if <condition>(<expr><name><name>fmt</name><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><return>return;</return></block></then></if>
+    <expr_stmt><expr><name>start_of_line</name> <operator>=</operator> <ternary><condition><expr><operator>(</operator><name><name>fmt</name><index>[<expr><call><name>strlen</name><argument_list>(<argument><expr><name>fmt</name></expr></argument>)</argument_list></call> <operator>-</operator> <literal type="number">1</literal></expr>]</index></name> <operator>==</operator> <literal type="char">'\n'</literal><operator>)</operator></expr> ?</condition><then> <expr><literal type="number">1</literal></expr> </then><else>: <expr><literal type="number">0</literal></expr></else></ternary></expr>;</expr_stmt>
+
+    <if>if <condition>(<expr><name>con_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <expr_stmt><expr><call><name>va_start</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>vfprintf</name><argument_list>(<argument><expr><name>con_file</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>, <argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>va_end</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    }</block></then></if>
+    <if>if <condition>(<expr><name>log_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <expr_stmt><expr><call><name>va_start</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>vfprintf</name><argument_list>(<argument><expr><name>log_file</name></expr></argument>, <argument><expr><name>fmt</name></expr></argument>, <argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>va_end</name><argument_list>(<argument><expr><name>arg_ptr</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    }</block></then></if>
+}</block></function>
+
+<comment type="block">/*
+ * Application-defined control print callback.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>app_print_cntrl</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>cntrl_code</name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><specifier>const</specifier> <name>char</name> <modifier>*</modifier></type><name>con_str</name></decl>, <modifier>*</modifier><decl><type ref="prev"/><name>log_str</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>i</name></decl>;</decl_stmt>
+
+    <if>if <condition>(<expr><name>cntrl_code</name> <operator>==</operator> <literal type="char">'\r'</literal></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* CR: reset line in console, new line in log file. */</comment>
+        <expr_stmt><expr><name>con_str</name> <operator>=</operator> <literal type="string">"\r"</literal></expr>;</expr_stmt>
+        <expr_stmt><expr><name>log_str</name> <operator>=</operator> <literal type="string">"\n"</literal></expr>;</expr_stmt>
+        <expr_stmt><expr><name>start_of_line</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+    }</block></then>
+    <elseif>else <if>if <condition>(<expr><name>cntrl_code</name> <operator>==</operator> <literal type="char">'\v'</literal></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* VT: new line if current line is not empty, nothing otherwise. */</comment>
+        <if>if <condition>(<expr><operator>!</operator><name>start_of_line</name></expr>)</condition><then>
+        <block>{
+            <expr_stmt><expr><name>con_str</name> <operator>=</operator> <name>log_str</name> <operator>=</operator> <literal type="string">"\n"</literal></expr>;</expr_stmt>
+            <expr_stmt><expr><name>start_of_line</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+        }</block></then>
+        <else>else
+            <block type="pseudo"><expr_stmt><expr><name>con_str</name> <operator>=</operator> <name>log_str</name> <operator>=</operator> <literal type="string">""</literal></expr>;</expr_stmt></block></else></if>
+    }</block></then></if></elseif>
+    <elseif>else <if>if <condition>(<expr><name>cntrl_code</name> <operator>&lt;</operator> <literal type="number">0</literal> <operator>&amp;&amp;</operator> <name>cntrl_code</name> <operator>&gt;</operator> <operator>-</operator><literal type="number">80</literal> <operator>&amp;&amp;</operator> <name>start_of_line</name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Minus N: erase first N characters from line, in console only. */</comment>
+        <if>if <condition>(<expr><name>con_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+        <block>{
+            <for>for <control>(<init><expr><name>i</name> <operator>=</operator> <literal type="number">0</literal></expr>;</init> <condition><expr><name>i</name> <operator>&gt;</operator> <name>cntrl_code</name></expr>;</condition> <incr><expr><operator>--</operator><name>i</name></expr></incr>)</control>
+                <block type="pseudo"><expr_stmt><expr><call><name>fputc</name><argument_list>(<argument><expr><literal type="char">' '</literal></expr></argument>, <argument><expr><name>con_file</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></for>
+        }</block></then></if>
+        <expr_stmt><expr><name>con_str</name> <operator>=</operator> <literal type="string">"\r"</literal></expr>;</expr_stmt>
+        <expr_stmt><expr><name>log_str</name> <operator>=</operator> <literal type="string">""</literal></expr>;</expr_stmt>
+    }</block></then></if></elseif>
+    <else>else
+    <block>{
+        <comment type="block">/* Unhandled control code (due to internal error): show err marker. */</comment>
+        <expr_stmt><expr><name>con_str</name> <operator>=</operator> <name>log_str</name> <operator>=</operator> <literal type="string">"&lt;?&gt;"</literal></expr>;</expr_stmt>
+    }</block></else></if>
+
+    <if>if <condition>(<expr><name>con_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>fputs</name><argument_list>(<argument><expr><name>con_str</name></expr></argument>, <argument><expr><name>con_file</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    <if>if <condition>(<expr><name>log_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>fputs</name><argument_list>(<argument><expr><name>log_str</name></expr></argument>, <argument><expr><name>log_file</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+}</block></function>
+
+<comment type="block">/*
+ * Application-defined progress update callback.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>app_progress</name><parameter_list>(<parameter><decl><type><name>unsigned</name> <name>long</name></type> <name>current_step</name></decl></parameter>, <parameter><decl><type><name>unsigned</name> <name>long</name></type> <name>total_steps</name></decl></parameter>)</parameter_list>
+<block>{
+    <comment type="block">/* There will be a potentially long wait, so flush the console output. */</comment>
+    <if>if <condition>(<expr><name>con_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>fflush</name><argument_list>(<argument><expr><name>con_file</name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+    <comment type="block">/* An eager flush of the line-buffered log file is not very important. */</comment>
+
+    <comment type="block">/* A GUI application would normally update a progress bar. */</comment>
+    <comment type="block">/* Here we ignore the progress info. */</comment>
+    <if>if <condition>(<expr><name>current_step</name> <operator>&amp;&amp;</operator> <name>total_steps</name></expr>)</condition><then>
+        <block type="pseudo"><return>return;</return></block></then></if>
+}</block></function>
+
+<comment type="block">/*
+ * Application initialization.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>app_init</name><parameter_list>(<parameter><decl><type><name>void</name></type></decl></parameter>)</parameter_list>
+<block>{
+    <expr_stmt><expr><name>start_of_line</name> <operator>=</operator> <literal type="number">1</literal></expr>;</expr_stmt>
+
+    <if>if <condition>(<expr><name>operation</name> <operator>==</operator> <name>OP_SHOW_HELP</name> <operator>||</operator> <name>operation</name> <operator>==</operator> <name>OP_SHOW_VERSION</name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>con_file</name> <operator>=</operator> <name>stdout</name></expr>;</expr_stmt></block></then>
+    <elseif>else <if>if <condition>(<expr><operator>!</operator><name><name>options</name><operator>.</operator><name>quiet</name></name></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><name>con_file</name> <operator>=</operator> <name>stderr</name></expr>;</expr_stmt></block></then></if></elseif>
+    <else>else
+        <block type="pseudo"><expr_stmt><expr><name>con_file</name> <operator>=</operator> <name>NULL</name></expr>;</expr_stmt></block></else></if>
+
+    <if>if <condition>(<expr><name><name>options</name><operator>.</operator><name>log_name</name></name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Open the log file, line-buffered. */</comment>
+        <if>if <condition>(<expr><operator>(</operator><name>log_file</name> <operator>=</operator> <call><name>fopen</name><argument_list>(<argument><expr><name><name>options</name><operator>.</operator><name>log_name</name></name></expr></argument>, <argument><expr><literal type="string">"a"</literal></expr></argument>)</argument_list></call><operator>)</operator> <operator>==</operator> <name>NULL</name></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><call><name>error</name><argument_list>(<argument><expr><literal type="string">"Can't open log file: %s\n"</literal></expr></argument>, <argument><expr><name><name>options</name><operator>.</operator><name>log_name</name></name></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+        <expr_stmt><expr><call><name>setvbuf</name><argument_list>(<argument><expr><name>log_file</name></expr></argument>, <argument><expr><name>NULL</name></expr></argument>, <argument><expr><name>_IOLBF</name></expr></argument>, <argument><expr><name>BUFSIZ</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"** Warning: %s\n\n"</literal></expr></argument>,
+                   <argument><expr><literal type="string">"The option -log is deprecated; use shell redirection"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    }</block></then></if>
+}</block></function>
+
+<comment type="block">/*
+ * Application finalization.
+ */</comment>
+<function><specifier>static</specifier> <type><name>void</name></type>
+<name>app_finish</name><parameter_list>(<parameter><decl><type><name>void</name></type></decl></parameter>)</parameter_list>
+<block>{
+    <if>if <condition>(<expr><name>log_file</name> <operator>!=</operator> <name>NULL</name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Close the log file. */</comment>
+        <expr_stmt><expr><call><name>fclose</name><argument_list>(<argument><expr><name>log_file</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    }</block></then></if>
+}</block></function>
+
+<comment type="block">/*
+ * File list processing.
+ */</comment>
+<function><specifier>static</specifier> <type><name>int</name></type>
+<name>process_files</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>argc</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name><name>argv</name><index>[]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>int</name></type> <name>result</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name><name>struct</name> <name>opng_ui</name></name></type> <name>ui</name></decl>;</decl_stmt>
+    <decl_stmt><decl><type><name>int</name></type> <name>i</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Initialize the optimization engine. */</comment>
+    <expr_stmt><expr><name><name>ui</name><operator>.</operator><name>printf_fn</name></name> <operator>=</operator> <name>app_printf</name></expr>;</expr_stmt>
+    <expr_stmt><expr><name><name>ui</name><operator>.</operator><name>print_cntrl_fn</name></name> <operator>=</operator> <name>app_print_cntrl</name></expr>;</expr_stmt>
+    <expr_stmt><expr><name><name>ui</name><operator>.</operator><name>progress_fn</name></name> <operator>=</operator> <name>app_progress</name></expr>;</expr_stmt>
+    <expr_stmt><expr><name><name>ui</name><operator>.</operator><name>panic_fn</name></name> <operator>=</operator> <name>panic</name></expr>;</expr_stmt>
+    <if>if <condition>(<expr><call><name>opng_initialize</name><argument_list>(<argument><expr><operator>&amp;</operator><name>options</name></expr></argument>, <argument><expr><operator>&amp;</operator><name>ui</name></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>panic</name><argument_list>(<argument><expr><literal type="string">"Can't initialize optimization engine"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+
+    <comment type="block">/* Iterate over file names. */</comment>
+    <expr_stmt><expr><name>result</name> <operator>=</operator> <name>EXIT_SUCCESS</name></expr>;</expr_stmt>
+    <for>for <control>(<init><expr><name>i</name> <operator>=</operator> <literal type="number">1</literal></expr>;</init> <condition><expr><name>i</name> <operator>&lt;</operator> <name>argc</name></expr>;</condition> <incr><expr><operator>++</operator><name>i</name></expr></incr>)</control>
+    <block>{
+        <if>if <condition>(<expr><name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name> <operator>==</operator> <name>NULL</name> <operator>||</operator> <name><name>argv</name><index>[<expr><name>i</name></expr>]</index><index>[<expr><literal type="number">0</literal></expr>]</index></name> <operator>==</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><continue>continue;</continue></block></then></if>  <comment type="block">/* this was an "-option" */</comment>
+        <if>if <condition>(<expr><call><name>opng_optimize</name><argument_list>(<argument><expr><name><name>argv</name><index>[<expr><name>i</name></expr>]</index></name></expr></argument>)</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+            <block type="pseudo"><expr_stmt><expr><name>result</name> <operator>=</operator> <name>EXIT_FAILURE</name></expr>;</expr_stmt></block></then></if>
+    }</block></for>
+
+    <comment type="block">/* Finalize the optimization engine. */</comment>
+    <if>if <condition>(<expr><call><name>opng_finalize</name><argument_list>()</argument_list></call> <operator>!=</operator> <literal type="number">0</literal></expr>)</condition><then>
+        <block type="pseudo"><expr_stmt><expr><call><name>panic</name><argument_list>(<argument><expr><literal type="string">"Can't finalize optimization engine"</literal></expr></argument>)</argument_list></call></expr>;</expr_stmt></block></then></if>
+
+    <return>return <expr><name>result</name></expr>;</return>
+}</block></function>
+
+<comment type="block">/*
+ * The main function.
+ */</comment>
+<function><type><name>int</name></type>
+<name>main</name><parameter_list>(<parameter><decl><type><name>int</name></type> <name>argc</name></decl></parameter>, <parameter><decl><type><name>char</name> <modifier>*</modifier></type><name><name>argv</name><index>[]</index></name></decl></parameter>)</parameter_list>
+<block>{
+    <decl_stmt><decl><type><name>int</name></type> <name>result</name></decl>;</decl_stmt>
+
+    <comment type="block">/* Parse the user options and initialize the application. */</comment>
+    <expr_stmt><expr><call><name>parse_args</name><argument_list>(<argument><expr><name>argc</name></expr></argument>, <argument><expr><name>argv</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><call><name>app_init</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    <expr_stmt><expr><name>result</name> <operator>=</operator> <name>EXIT_SUCCESS</name></expr>;</expr_stmt>
+
+    <if>if <condition>(<expr><name><name>local_options</name><operator>.</operator><name>version</name></name></expr>)</condition><then>
+    <block>{
+        <comment type="block">/* Print the copyright and version info. */</comment>
+        <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"%s\n"</literal></expr></argument>, <argument><expr><name>msg_intro</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+    }</block></then></if>
+
+    <switch>switch <condition>(<expr><name>operation</name></expr>)</condition>
+    <block>{
+    <case>case <expr><name>OP_RUN</name></expr>:</case>
+        <comment type="block">/* Run the application. */</comment>
+        <expr_stmt><expr><name>result</name> <operator>=</operator> <call><name>process_files</name><argument_list>(<argument><expr><name>argc</name></expr></argument>, <argument><expr><name>argv</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <break>break;</break>
+    <case>case <expr><name>OP_SHOW_HELP</name></expr>:</case>
+        <if>if <condition>(<expr><name><name>local_options</name><operator>.</operator><name>help</name></name></expr>)</condition><then>
+        <block>{
+            <comment type="block">/* Print the extended help text. */</comment>
+            <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"%s%s%s"</literal></expr></argument>,
+                       <argument><expr><name>msg_help_synopsis</name></expr></argument>,
+                       <argument><expr><name>msg_help_options</name></expr></argument>,
+                       <argument><expr><name>msg_help_examples</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        }</block></then>
+        <else>else
+        <block>{
+            <comment type="block">/* Print the basic help text. */</comment>
+            <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"%s%s%s%s"</literal></expr></argument>,
+                       <argument><expr><name>msg_help_synopsis</name></expr></argument>,
+                       <argument><expr><name>msg_help_basic_options</name></expr></argument>,
+                       <argument><expr><name>msg_help_examples</name></expr></argument>,
+                       <argument><expr><name>msg_help_more</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        }</block></else></if>
+        <break>break;</break>
+    <case>case <expr><name>OP_SHOW_VERSION</name></expr>:</case>
+        <comment type="block">/* Print the licensing terms and the extended version info. */</comment>
+        <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"%s\n"</literal></expr></argument>, <argument><expr><name>msg_license</name></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <expr_stmt><expr><call><name>app_printf</name><argument_list>(<argument><expr><literal type="string">"Using libpng version %s and zlib version %s\n"</literal></expr></argument>,
+                   <argument><expr><call><name>png_get_libpng_ver</name><argument_list>(<argument><expr><name>NULL</name></expr></argument>)</argument_list></call></expr></argument>, <argument><expr><call><name>zlibVersion</name><argument_list>()</argument_list></call></expr></argument>)</argument_list></call></expr>;</expr_stmt>
+        <break>break;</break>
+    <default>default:</default>
+        <expr_stmt><expr><name>result</name> <operator>=</operator> <operator>-</operator><literal type="number">1</literal></expr>;</expr_stmt>
+    }</block></switch>
+
+    <comment type="block">/* Finalize the application. */</comment>
+    <expr_stmt><expr><call><name>app_finish</name><argument_list>()</argument_list></call></expr>;</expr_stmt>
+    <return>return <expr><name>result</name></expr>;</return>
+}</block></function>
+</unit>
