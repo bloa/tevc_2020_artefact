@@ -89,12 +89,12 @@ install_optipng: archives/optipng-0.7.7.tar.gz
 	tar -C artefact/code -xf $<
 	cd artefact/code/optipng-0.7.7 && ./configure
 	cd artefact/code/optipng-0.7.7/src/optipng && make
-	cp instr/{optim,optipng}.c.xml artefact/code/optipng-0.7.7/src/optipng
+	cp instr/optim.c.xml instr/optipng.c.xml artefact/code/optipng-0.7.7/src/optipng
 
 install_moead: archives/MOEA-D-DE.rar
 	rm -rf artefact/code/moead-2007
 	unrar x $< artefact/code/moead-2007/
-	mkdir artefact/code/moead-2007/{GD,POF,POS}
+	mkdir artefact/code/moead-2007/GD artefact/code/moead-2007/POF artefact/code/moead-2007/POS
 	patch -d artefact/code -p 1 < instr/moead.patch
 	cd artefact/code/moead-2007 && make main_moea
 	cp instr/recombination.h.xml artefact/code/moead-2007/common
