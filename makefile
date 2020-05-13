@@ -63,6 +63,7 @@ install_pyggi: archives/pyggi_6cb31a3.tar.gz
 	rm -rf artefact/pyggi
 	tar -C artefact -xf $<
 	patch -d artefact -p 1 < instr/pyggi.patch
+	patch -d artefact -p 1 < instr/pyggi_noastor.patch
 	mv artefact/pyggi foo
 	mv foo/pyggi artefact
 	rm -r foo

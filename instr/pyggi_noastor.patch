@@ -1,0 +1,27 @@
+diff -ru a/pyggi/tree/__init__.py b/pyggi/tree/__init__.py
+--- a/pyggi/tree/__init__.py	2020-05-09 19:40:39.000000000 +0100
++++ b/pyggi/tree/__init__.py	2020-05-13 20:36:08.187121007 +0100
+@@ -1,5 +1,5 @@
+ from .abstract_engine import AbstractTreeEngine
+-from .astor_engine import AstorEngine
++# from .astor_engine import AstorEngine
+ from .xml_engine import XmlEngine
+ from .tree import StmtReplacement, StmtInsertion, StmtDeletion, StmtMoving
+ from .tree import TreeProgram
+diff -ru a/pyggi/tree/tree.py b/pyggi/tree/tree.py
+--- a/pyggi/tree/tree.py	2020-05-09 19:40:39.000000000 +0100
++++ b/pyggi/tree/tree.py	2020-05-13 20:42:17.840460729 +0100
+@@ -11,9 +11,10 @@
+     @classmethod
+     def get_engine(cls, file_name):
+         extension = get_file_extension(file_name)
+-        if extension in ['.py']:
+-            return AstorEngine
+-        elif extension in ['.xml']:
++        # if extension in ['.py']:
++        #     return AstorEngine
++        # elif extension in ['.xml']:
++        if extension in ['.xml']:
+             return XmlEngine
+         else:
+             raise Exception('{} file is not supported'.format(extension))
