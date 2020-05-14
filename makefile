@@ -1,3 +1,6 @@
+BACKUP_ARCH=pyggi_6cb31a3.tar.gz minisat-2.2.0.tar.gz sat4j_016981c0.tar.gz optipng-0.7.7.tar.gz MOEA-D-DE.rar
+DATA_ARCH=sat_cit2.tar.gz sat_uniform.tar.gz png_color.tar.gz png_greyscale.tar.gz
+
 all: reset install_pyggi install_code install_data
 
 reset:
@@ -22,9 +25,6 @@ archives/pyggi_6cb31a3.tar.gz:
 archives/minisat-2.2.0.tar.gz:
 	wget 'http://minisat.se/downloads/minisat-2.2.0.tar.gz' -O $@
 
-archives/minisat-2.2.0.tar.gz_backup:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/minisat-2.2.0.tar.gz' -O $@
-
 archives/sat4j_016981c0.tar.gz:
 	git clone https://gitlab.ow2.org/sat4j/sat4j.git
 	cd sat4j && git checkout 016981c0
@@ -32,32 +32,17 @@ archives/sat4j_016981c0.tar.gz:
 	tar czf $@ sat4j
 	rm -rf sat4j
 
-archives/sat4j_016981c0.tar.gz_backup:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/sat4j_2.3.6_016981c0.tar.gz' -O $@
-
 archives/optipng-0.7.7.tar.gz:
 	wget 'https://sourceforge.net/projects/optipng/files/OptiPNG/optipng-0.7.7/optipng-0.7.7.tar.gz/download' -O $@
-
-archives/optipng-0.7.7.tar.gz_backup:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/optipng-0.7.7.tar.gz' -O $@
 
 archives/MOEA-D-DE.rar:
 	wget 'https://web.archive.org/web/20170422063433/http://dces.essex.ac.uk/staff/qzhang/code/MOEADDE/MOEA-D-DE.rar' -O $@
 
-archives/MOEA-D-DE.rar_backup:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/MOEA-D-DE.rar' -O $@
+$(foreach a,$(BACKUP_ARCH),archives/backup_$(a)): archives/backup_%:
+	wget 'https://github.com/bloa/tevc_2020_artefact/releases/download/v1.0-archives/$*' -O archives/$*
 
-archives/sat_cit2.tar.gz:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/tevc2020_sat_cit2.tar.gz' -O $@
-
-archives/sat_uniform.tar.gz:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/tevc2020_sat_uniform.tar.gz' -O $@
-
-archives/png_color.tar.gz:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/tevc2020_png_color.tar.gz' -O $@
-
-archives/png_greyscale.tar.gz:
-	wget 'http://www0.cs.ucl.ac.uk/staff/a.blot/files/tevc2020_png_greyscale.tar.gz' -O $@
+$(foreach a,$(DATA_ARCH),archives/$(a)): archives/%:
+	wget 'https://github.com/bloa/tevc_2020_artefact/releases/download/v1.0-archives/$*' -O archives/$*
 
 install_pyggi: archives/pyggi_6cb31a3.tar.gz
 	rm -rf artefact/pyggi
