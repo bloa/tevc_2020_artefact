@@ -11,7 +11,7 @@ import sys
 # sys.path.append(os.getcwd())
 
 import pyggi
-pyggi.PYGGI_DIR = './pyggi_tevc'
+pyggi.PYGGI_DIR = './logs_tevc'
 from pyggi.base import Patch
 from pyggi.tree import StmtReplacement, StmtInsertion, StmtDeletion
 

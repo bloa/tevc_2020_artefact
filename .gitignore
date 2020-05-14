@@ -2,5 +2,5 @@ archives
 artefact/code
 artefact/data
 artefact/pyggi
-artefact/results_tevc
+artefact/logs_tevc
 __pycache__
