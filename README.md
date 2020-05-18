@@ -1,9 +1,17 @@
-# [Paper Title] -- Artefact
+# Effectiveness and Efficiency of Search Heuristics for Genetic Improvement of Software — Artefact
 
-## Replication package
+Artifact associated with a paper in submission in the _IEEE Transactions on Evolutionary Computation (TEVC)_ journal, by Aymeric Blot and Justyna Petke.
+This paper investigates the performance of local search and genetic programming approaches when applying genetic improvement on MiniSAT, Sat4j, OptiPNG, MOEA/D and NSGA-II.
+
+## Usage
 
 There are two makefiles.
 One to build the replication package, and the second to actually run the experiments; none require explicit arguments.
+
+From the top level, simply run `make`.
+The external code and data used in the experiments will first be downloaded unmodified into the "archives" folder, then installed into the experiments folder "artefact", applying when necessary corrective and instrumentalisation patches that can be found in the "instr" folder.
+
+Once the replication package is completely rebuild, experiments can be started by running `make` from the "artefact" folder.
 
 
 ## Software version used
