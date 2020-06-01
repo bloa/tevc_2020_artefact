@@ -1,4 +1,4 @@
-# Effectiveness and Efficiency of Search Heuristics for Genetic Improvement of Software — Artefact
+# Empirical Comparison of Search Heuristics for Genetic Improvement of Software — Artefact
 
 Artifact associated with a paper in submission in the _IEEE Transactions on Evolutionary Computation (TEVC)_ journal, by Aymeric Blot and Justyna Petke.
 This paper investigates the performance of local search and genetic programming approaches when applying genetic improvement on MiniSAT, Sat4j, OptiPNG, MOEA/D and NSGA-II.
